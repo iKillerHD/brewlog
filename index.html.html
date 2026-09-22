@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>BrewLog ROI</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            oled: '#000000',
+            surface: {
+              card: '#121212',
+              elevated: '#1a1a1a',
+              border: '#262626',
+              borderSubtle: '#1f1f1f'
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Hardcoded Base CSS (Ensures styling never breaks even if CDN lags) -->
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    html, body {
+      background-color: #000000 !important;
+      color: #ffffff !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      width: 100%;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .mono-num {
+      font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+      font-feature-settings: "tnum" 1;
+      font-variant-numeric: tabular-nums;
+    }
+    input[type=range] {
+      accent-color: #ffffff;
+    }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    /* Smooth toast entrance */
+    @keyframes slideUp {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .slide-up-enter {
+      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-oled text-white min-h-screen font-sans antialiased overflow-x-hidden flex justify-center selection:bg-zinc-800">
+
+  <!-- Mobile Viewport Shell (Max 448px width, centered on larger screens) -->
+  <div id="appContainer" class="w-full max-w-md min-h-screen bg-oled flex flex-col relative px-4 pb-20 pt-3 border-x border-[#1a1a1a]">
+
+    <!-- 1. TOP HEADER -->
+    <header class="sticky top-0 z-30 bg-oled/95 backdrop-blur-md py-2.5 flex items-center justify-between border-b border-surface-border">
+      <div class="flex items-center gap-2">
+        <div id="topBrandIconContainer" class="w-6 h-6 rounded-lg bg-surface-elevated border border-surface-border flex items-center justify-center overflow-hidden p-0.5 shadow-sm">
+          <!-- Coffee Bean Vector Icon -->
+          <svg viewBox="0 0 24 24" class="w-4 h-4 text-emerald-400 fill-current" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79.09.43.23.85.42 1.25 1.05 2.16 3.19 3.54 5.57 3.54h.8v4.93zm0-6.93h-.8c-1.68 0-3.19-.98-3.93-2.5-.27-.56-.42-1.18-.42-1.83 0-3.37 2.45-6.17 5.15-6.6v10.93zm2 4.93v-4.93h.8c2.38 0 4.52-1.38 5.57-3.54.19-.4.33-.82.42-1.25.13.58.21 1.17.21 1.79 0 4.08-3.05 7.44-7 7.93zm0-6.93V4.07c2.7.43 5.15 3.23 5.15 6.6 0 .65-.15 1.27-.42 1.83-.74 1.52-2.25 2.5-3.93 2.5h-.8z"/>
+          </svg>
+        </div>
+        <h1 class="text-sm font-extrabold tracking-widest uppercase text-white font-mono">
+          BREWLOG<span class="text-zinc-500 text-xs font-normal ml-1">ROI</span>
+        </h1>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <button id="topCopyLogBtn" onclick="openExportModal()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-card hover:bg-surface-elevated text-zinc-300 hover:text-white border border-surface-border active:scale-95 transition text-[11px] font-medium font-mono">
+          <i data-lucide="clipboard-copy" class="w-3.5 h-3.5 text-zinc-400"></i>
+          <span>Copy</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. DECLUTTERED TOP TAB NAVIGATION BAR -->
+    <nav class="grid grid-cols-4 p-1 bg-surface-card rounded-xl border border-surface-border gap-1 font-mono text-[11px] mt-3 sticky top-14 z-20 shadow-lg">
+      <button id="navTabBrew" onclick="switchNavTab('brew')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 bg-white text-black shadow-sm">
+        <i data-lucide="coffee" class="w-3.5 h-3.5"></i>
+        <span>Brew</span>
+      </button>
+      <button id="navTabRoi" onclick="switchNavTab('roi')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 text-zinc-400 hover:text-white">
+        <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+        <span>ROI</span>
+      </button>
+      <button id="navTabHistory" onclick="switchNavTab('history')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 text-zinc-400 hover:text-white">
+        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+        <span>Logs</span>
+      </button>
+      <button id="navTabPantry" onclick="switchNavTab('pantry')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 text-zinc-400 hover:text-white">
+        <i data-lucide="package" class="w-3.5 h-3.5"></i>
+        <span>Pantry</span>
+      </button>
+    </nav>
+
+    <!-- MAIN SCROLLABLE CONTENT AREAS -->
+    <main class="space-y-4 pt-3 flex-1">
+
+      <!-- ================= TAB 1: CLEAN BREW LOGGER ================= -->
+      <section id="viewTabBrew" class="space-y-3.5">
+        <div class="bg-surface-card rounded-2xl p-4 border border-surface-border space-y-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono uppercase tracking-wider text-white font-bold flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Quick Coffee Logger</span>
+            </span>
+            <button id="repeatLastBtn" onclick="duplicateLastBrew()" class="hidden text-[10px] font-mono px-2.5 py-1 rounded-lg bg-surface-elevated border border-surface-border text-zinc-300 hover:text-white flex items-center gap-1 active:scale-95 transition" title="Repeat last brew">
+              <i data-lucide="rotate-cw" class="w-3 h-3 text-emerald-400"></i>
+              <span>Repeat Last</span>
+            </button>
+          </div>
+
+          <!-- 1. What are you brewing? (Dropdown) -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-mono text-zinc-400 uppercase tracking-wide flex items-center justify-between">
+              <span>Drink Type</span>
+              <span id="drinkSetupBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-surface-elevated text-zinc-300 border border-surface-borderSubtle">V60 Filter Setup</span>
+            </label>
+            <div class="relative">
+              <select id="quickDrinkSelect" onchange="handleDrinkSelectChange()" class="w-full bg-surface-elevated border border-surface-border rounded-xl px-3 py-2.5 text-xs font-mono text-white outline-none focus:border-zinc-400 cursor-pointer appearance-none">
+                <option value="V60" data-setup="v60">☕ V60 Pour Over</option>
+                <option value="Ice V60" data-setup="v60">❄️ Ice V60</option>
+                <option value="Switch" data-setup="v60">🔀 Hario Switch</option>
+                <option value="Moka Pot" data-setup="v60">♨️ Moka Pot</option>
+                <option value="Espresso" data-setup="espresso">⚡ Espresso (Double)</option>
+                <option value="Flat White" data-setup="espresso">🥛 Flat White</option>
+                <option value="Latte" data-setup="espresso">☕🥛 Cafe Latte</option>
+                <option value="Cortado" data-setup="espresso">🥃 Cortado</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Coffee Beans In-Stock (Dropdown) -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-mono text-zinc-400 uppercase tracking-wide">Active Coffee Beans</label>
+              <button onclick="switchNavTab('pantry')" class="text-[10px] text-zinc-500 hover:text-zinc-300 underline font-mono">+ Manage Beans</button>
+            </div>
+            <div class="relative">
+              <select id="quickBeanSelect" onchange="handleBeanSelectChange()" class="w-full bg-surface-elevated border border-surface-border rounded-xl px-3 py-2.5 text-xs font-mono text-white outline-none focus:border-zinc-400 cursor-pointer appearance-none">
+                <!-- Populated via JS (only non-finished bags) -->
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="noActiveBeansWarning" class="hidden text-[10px] text-amber-400 font-mono pt-1">
+              ⚠️ All bags are marked finished! Open the Pantry tab to add or unmark a bag.
+            </div>
+          </div>
+
+          <!-- 3. Dose Slider + Editable Number Input -->
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-mono text-zinc-400 uppercase tracking-wide">Coffee Dose</label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="customDoseInput" step="0.5" min="6" max="50" value="18" oninput="handleDoseInput(this.value)" class="w-14 py-1 px-1 bg-surface-elevated border border-surface-border rounded-lg text-center text-xs font-mono font-bold text-white outline-none focus:border-zinc-300">
+                <span class="text-xs font-mono text-zinc-400">g</span>
+              </div>
+            </div>
+
+            <!-- Smooth Range Slider -->
+            <input type="range" id="doseSlider" min="8" max="32" step="0.5" value="18" oninput="handleDoseSlider(this.value)" class="w-full h-1.5 bg-[#252525] rounded-lg appearance-none cursor-pointer accent-white">
+
+            <!-- Dose Quick Presets -->
+            <div class="flex items-center justify-between gap-2 pt-1 font-mono text-xs">
+              <button type="button" onclick="setQuickDose(15)" class="dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition">15g</button>
+              <button type="button" onclick="setQuickDose(18)" class="dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition">18g</button>
+              <button type="button" onclick="setQuickDose(20)" class="dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition">20g</button>
+              <button type="button" onclick="setQuickDose(22)" class="dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition">22g</button>
+            </div>
+          </div>
+
+          <!-- Financial Snapshot Banner -->
+          <div class="p-3 rounded-xl bg-surface-elevated border border-surface-borderSubtle flex items-center justify-between text-xs font-mono">
+            <div>
+              <div class="text-[10px] text-zinc-500 uppercase">Cup Cost</div>
+              <div id="inlinePreviewCost" class="font-bold text-white">0.000 KD</div>
+            </div>
+            <div class="text-right">
+              <div class="text-[10px] text-zinc-500 uppercase">Net Saved vs Cafe</div>
+              <div id="inlinePreviewSavings" class="font-bold text-emerald-400">+0.000 KD</div>
+            </div>
+          </div>
+
+          <!-- Full-Width Log Button -->
+          <button id="inlineLogBtn" onclick="logBrewNow()" class="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 active:scale-[0.99] text-black font-bold text-xs tracking-wide transition flex items-center justify-center gap-1.5 shadow-md">
+            <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
+            <span>Log Brewed Cup</span>
+            <span id="inlineLogSavingsBadge" class="text-[11px] font-mono text-emerald-700 font-semibold ml-1">(+0.000 KD)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: ROI & BREAK-EVEN ================= -->
+      <section id="viewTabRoi" class="hidden space-y-4">
+        <!-- SETUP SWITCHER -->
+        <div class="grid grid-cols-2 p-1 bg-surface-card rounded-xl border border-surface-border gap-1 font-mono text-xs">
+          <button id="tabBtnV60" onclick="switchMode('v60')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 bg-white text-black shadow-sm">
+            <span>☕ V60 Filter</span>
+          </button>
+          <button id="tabBtnEspresso" onclick="switchMode('espresso')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white">
+            <span>⚡ Espresso Bar</span>
+          </button>
+        </div>
+
+        <!-- HERO FINANCIAL CARD -->
+        <div id="heroCard" class="bg-surface-card rounded-2xl p-4 border border-surface-border relative overflow-hidden transition-all duration-300">
+          <div class="flex items-center justify-between text-[11px] font-mono tracking-wider uppercase">
+            <span id="heroStatusLabel" class="text-zinc-400 flex items-center gap-1.5">
+              <span id="heroModePill" class="px-1.5 py-0.5 rounded bg-surface-elevated text-[10px] text-zinc-300 font-semibold border border-surface-borderSubtle">V60</span>
+              <span>Break-Even</span>
+            </span>
+            <span id="heroPercentBadge" class="text-zinc-300 font-bold">0% Amortized</span>
+          </div>
+
+          <div class="mt-2 flex items-baseline gap-2">
+            <h2 id="heroMainAmount" class="text-3xl sm:text-4xl font-black tracking-tight text-white mono-num">
+              0.000
+            </h2>
+            <span id="heroCurrencyBadge" class="text-sm font-semibold text-zinc-400 mono-num">KD</span>
+          </div>
+
+          <!-- 3px Minimalist Progress Line -->
+          <div class="w-full bg-[#202020] rounded-full h-[3px] mt-3 overflow-hidden">
+            <div id="heroProgressBar" class="h-full bg-white transition-all duration-500" style="width: 0%;"></div>
+          </div>
+
+          <!-- Financial Row -->
+          <div class="mt-3 pt-2.5 border-t border-surface-borderSubtle flex items-center justify-between text-[11px] font-mono text-zinc-400">
+            <div>Cups: <span id="statCupsCount" class="text-white font-semibold">0</span></div>
+            <div class="text-zinc-600">•</div>
+            <div>Saved: <span id="statTotalSaved" class="text-emerald-400 font-semibold">+0.000 KD</span></div>
+            <div class="text-zinc-600">•</div>
+            <div>Gear: <span id="statGearTotal" class="text-zinc-200 font-semibold">0.000 KD</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: LOGS & HISTORY ================= -->
+      <section id="viewTabHistory" class="hidden space-y-3">
+        <div class="flex items-center justify-between text-xs font-mono">
+          <span class="text-zinc-400 uppercase tracking-wider text-[11px] font-semibold">Brew History</span>
+          <span id="feedCountBadge" class="text-zinc-500 text-[11px]">0 entries</span>
+        </div>
+
+        <div id="brewFeedList" class="space-y-1.5">
+          <!-- Populated via JS -->
+        </div>
+
+        <div id="feedEmptyState" class="hidden py-8 text-center border border-dashed border-surface-border rounded-2xl">
+          <p class="text-xs text-zinc-400 font-mono">No coffee logged yet</p>
+          <p class="text-[11px] text-zinc-600 font-mono mt-0.5">Use the Brew tab to log your first cup.</p>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: PANTRY & INVENTORY ================= -->
+      <section id="viewTabPantry" class="hidden space-y-4">
+
+        <!-- Active Coffee Beans Section -->
+        <div class="bg-surface-card rounded-2xl p-4 border border-surface-border space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="space-y-0.5">
+              <span class="font-bold text-white uppercase text-xs tracking-wider">Coffee Beans In-Stock</span>
+              <div class="text-[10px] text-zinc-500 font-mono">Tap "Bag Finished" when a bag is empty</div>
+            </div>
+            <button onclick="toggleBeanForm()" id="toggleBeanFormBtn" class="text-xs text-white bg-surface-elevated border border-surface-border px-2.5 py-1 rounded-lg font-mono hover:bg-[#222]">
+              + Add Bean
+            </button>
+          </div>
+
+          <!-- Inline Add Bean Form -->
+          <form id="addBeanForm" onsubmit="handleAddBeanSubmit(event)" class="hidden bg-surface-elevated p-3 rounded-xl border border-surface-border space-y-2.5">
+            <input type="text" id="newBeanName" placeholder="Roaster - Origin / Name" class="w-full bg-[#111] border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-zinc-400 font-mono" required>
+            <div class="grid grid-cols-2 gap-2 font-mono">
+              <div>
+                <label class="text-[10px] text-zinc-400">Bag Weight (g)</label>
+                <input type="number" id="newBeanWeight" placeholder="250" value="250" min="1" step="1" class="w-full bg-[#111] border border-surface-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-zinc-400" required>
+              </div>
+              <div>
+                <label class="text-[10px] text-zinc-400">Bag Price (<span class="currency-label">KD</span>)</label>
+                <input type="number" id="newBeanPrice" placeholder="5.500" min="0.001" step="0.025" class="w-full bg-[#111] border border-surface-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-zinc-400" required>
+              </div>
+            </div>
+            <div class="flex gap-2 pt-1 font-mono">
+              <button type="button" onclick="toggleBeanForm()" class="flex-1 py-1.5 rounded-lg bg-surface-card text-zinc-400 hover:text-white border border-surface-border text-[11px]">Cancel</button>
+              <button type="submit" class="flex-1 py-1.5 rounded-lg bg-white text-black font-semibold text-[11px]">Save Bean</button>
+            </div>
+          </form>
+
+          <!-- Active Beans List -->
+          <div id="drawerBeansList" class="space-y-2 font-mono">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Finished / Archived Bags Collapsible Section -->
+        <div class="bg-surface-card rounded-2xl border border-surface-border overflow-hidden">
+          <details class="group p-4">
+            <summary class="flex items-center justify-between cursor-pointer list-none select-none font-mono">
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-white uppercase text-xs tracking-wider">Finished Bags Archive</span>
+                  <span id="finishedBagsCountBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-surface-elevated text-zinc-400 border border-surface-borderSubtle">0 bags</span>
+                </div>
+                <div class="text-[10px] text-zinc-500">Hidden from daily logger • Tap to expand / restore</div>
+              </div>
+              <div class="p-1 text-zinc-400 transition-transform group-open:rotate-180">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </div>
+            </summary>
+
+            <div id="finishedBeansList" class="mt-3 pt-3 border-t border-surface-borderSubtle space-y-2 font-mono">
+              <!-- Rendered via JS -->
+            </div>
+          </details>
+        </div>
+
+        <!-- Tools & Equipment Accordion -->
+        <div class="bg-surface-card rounded-2xl border border-surface-border overflow-hidden">
+          <details class="group p-4">
+            <summary class="flex items-center justify-between cursor-pointer list-none select-none font-mono">
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-white uppercase text-xs tracking-wider">Tools & Equipment</span>
+                  <span id="gearCountBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-surface-elevated text-zinc-400 border border-surface-borderSubtle">6 items</span>
+                </div>
+                <div class="text-[10px] text-zinc-500">Rarely changed • Tap to edit gear</div>
+              </div>
+              <div class="p-1 text-zinc-400 transition-transform group-open:rotate-180">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </div>
+            </summary>
+
+            <div class="mt-3 pt-3 border-t border-surface-borderSubtle space-y-3 font-mono">
+              <div class="flex items-center justify-end">
+                <button onclick="toggleGearForm()" id="toggleGearFormBtn" class="text-[11px] text-zinc-400 hover:text-white underline">
+                  + Add Gear
+                </button>
+              </div>
+
+              <!-- Add Gear Form -->
+              <form id="addGearForm" onsubmit="handleAddGearSubmit(event)" class="hidden bg-surface-elevated p-3 rounded-xl border border-surface-border space-y-2.5">
+                <input type="text" id="newGearName" placeholder="e.g. Fellow Ode Grinder" class="w-full bg-[#111] border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-zinc-400" required>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-[10px] text-zinc-400">Price (<span class="currency-label">KD</span>)</label>
+                    <input type="number" id="newGearPrice" placeholder="115.000" min="0" step="0.250" class="w-full bg-[#111] border border-surface-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-zinc-400" required>
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-zinc-400">Assign Setup</label>
+                    <select id="newGearSetup" class="w-full bg-[#111] border border-surface-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-zinc-400">
+                      <option value="v60">V60 Setup</option>
+                      <option value="espresso">Espresso Setup</option>
+                      <option value="shared">Shared (50% / 50%)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="flex gap-2 pt-1">
+                  <button type="button" onclick="toggleGearForm()" class="flex-1 py-1.5 rounded-lg bg-surface-card text-zinc-400 hover:text-white border border-surface-border text-[11px]">Cancel</button>
+                  <button type="submit" class="flex-1 py-1.5 rounded-lg bg-white text-black font-semibold text-[11px]">Save Gear</button>
+                </div>
+              </form>
+
+              <!-- Gear List -->
+              <div id="drawerGearList" class="space-y-1.5"></div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Benchmarks Accordion -->
+        <div class="bg-surface-card rounded-2xl border border-surface-border p-4 space-y-3 font-mono">
+          <span class="font-bold text-white uppercase text-xs tracking-wider block">Cafe Benchmark Prices</span>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="bg-surface-elevated p-2 rounded-xl border border-surface-border">
+              <span class="text-zinc-400 block text-[10px]">V60 / Moka</span>
+              <input type="number" step="0.050" id="benchInputV60" onchange="saveBenchmarks()" class="w-full mt-1 bg-black border border-surface-border rounded px-2 py-1 text-white font-mono outline-none focus:border-zinc-400">
+            </div>
+            <div class="bg-surface-elevated p-2 rounded-xl border border-surface-border">
+              <span class="text-zinc-400 block text-[10px]">Espresso</span>
+              <input type="number" step="0.050" id="benchInputEspresso" onchange="saveBenchmarks()" class="w-full mt-1 bg-black border border-surface-border rounded px-2 py-1 text-white font-mono outline-none focus:border-zinc-400">
+            </div>
+            <div class="bg-surface-elevated p-2 rounded-xl border border-surface-border">
+              <span class="text-zinc-400 block text-[10px]">Latte / Flat White</span>
+              <input type="number" step="0.050" id="benchInputMilk" onchange="saveBenchmarks()" class="w-full mt-1 bg-black border border-surface-border rounded px-2 py-1 text-white font-mono outline-none focus:border-zinc-400">
+            </div>
+            <div class="bg-surface-elevated p-2 rounded-xl border border-surface-border">
+              <span class="text-zinc-400 block text-[10px]">Cortado</span>
+              <input type="number" step="0.050" id="benchInputCortado" onchange="saveBenchmarks()" class="w-full mt-1 bg-black border border-surface-border rounded px-2 py-1 text-white font-mono outline-none focus:border-zinc-400">
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-zinc-400 text-[11px]">Currency:</span>
+            <input type="text" id="settingCurrency" maxlength="4" value="KD" onchange="saveBenchmarks()" class="w-16 bg-surface-elevated border border-surface-border rounded-lg px-2 py-1 text-center text-white font-mono outline-none focus:border-zinc-400 uppercase">
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-full max-w-xs flex flex-col items-center gap-2"></div>
+
+    <!-- EXPORT MODAL -->
+    <div id="exportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-surface-card border border-surface-border rounded-2xl w-full max-w-sm p-4 space-y-3 font-mono shadow-2xl">
+        <div class="flex items-center justify-between">
+          <span class="text-xs uppercase tracking-wider text-white font-bold">Export Coffee Log</span>
+          <button onclick="closeExportModal()" class="text-zinc-500 hover:text-white p-1">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1 text-[11px]">
+          <button id="expBtnAll" onclick="setExportFilter('all')" class="py-1.5 rounded-lg bg-white text-black font-semibold text-center">All Time</button>
+          <button id="expBtnMonth" onclick="setExportFilter('month')" class="py-1.5 rounded-lg bg-surface-elevated text-zinc-400 border border-surface-border text-center hover:text-white">Last 30d</button>
+          <button id="expBtnCustom" onclick="setExportFilter('custom')" class="py-1.5 rounded-lg bg-surface-elevated text-zinc-400 border border-surface-border text-center hover:text-white">Custom</button>
+        </div>
+
+        <div id="customExportDates" class="hidden grid grid-cols-2 gap-2 text-[10px]">
+          <div>
+            <span class="text-zinc-500">From</span>
+            <input type="date" id="exportFromDate" onchange="buildExportText()" class="w-full bg-[#111] border border-surface-border rounded px-2 py-1 text-white">
+          </div>
+          <div>
+            <span class="text-zinc-500">To</span>
+            <input type="date" id="exportToDate" onchange="buildExportText()" class="w-full bg-[#111] border border-surface-border rounded px-2 py-1 text-white">
+          </div>
+        </div>
+
+        <textarea id="exportPreviewArea" readonly rows="6" class="w-full bg-[#0a0a0a] border border-surface-border rounded-xl p-2.5 text-[10px] text-zinc-300 font-mono outline-none resize-none leading-relaxed"></textarea>
+
+        <button onclick="executeClipboardCopy()" class="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition">
+          <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
+          <span>Copy to Clipboard</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MINIMAL CONFIRM DIALOG -->
+    <div id="minimalConfirmDialog" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-surface-card border border-surface-border rounded-2xl w-full max-w-xs p-4 space-y-3 font-mono shadow-2xl text-center">
+        <h3 id="confirmDialogTitle" class="text-xs font-bold text-white uppercase tracking-wider">Are you sure?</h3>
+        <p id="confirmDialogMsg" class="text-[11px] text-zinc-400"></p>
+        <div class="flex gap-2 pt-1">
+          <button id="confirmCancelBtn" class="flex-1 py-1.5 rounded-lg bg-surface-elevated border border-surface-border text-zinc-300 text-xs">Cancel</button>
+          <button id="confirmOkBtn" class="flex-1 py-1.5 rounded-lg bg-white text-black font-bold text-xs">OK</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- APPLICATION LOGIC & DATA PERSISTENCE -->
+  <script>
+    const STORAGE_KEY = "brewlog_roi_data_v2";
+
+    // Default Application State
+    let APP = {
+      activeTab: 'brew',
+      activeMode: 'v60',
+      currency: "KD",
+      benchmarks: {
+        "V60": 2.000,
+        "Ice V60": 2.250,
+        "Switch": 2.000,
+        "Moka Pot": 1.250,
+        "Espresso": 1.250,
+        "Cortado": 1.500,
+        "Flat White": 1.750,
+        "Latte": 1.750
+      },
+      equipment: [
+        { id: "eq-1", name: "Fellow Ode Gen 2 Grinder", price: 115.000, setup: "v60" },
+        { id: "eq-2", name: "Hario V60 Switch + Glass Server", price: 18.500, setup: "v60" },
+        { id: "eq-3", name: "Timemore Scale", price: 16.000, setup: "shared" },
+        { id: "eq-4", name: "Breville Bambino Plus Espresso Machine", price: 155.000, setup: "espresso" },
+        { id: "eq-5", name: "DF64 Gen 2 Grinder", price: 125.000, setup: "espresso" },
+        { id: "eq-6", name: "Normcore 54mm Portafilter & Tamper", price: 24.000, setup: "espresso" }
+      ],
+      beans: [
+        {
+          id: "bean-1",
+          name: "Earth Roastery - Ethiopia Yirgacheffe",
+          bagWeight: 250,
+          bagPrice: 5.500,
+          remainingGrams: 184,
+          finished: false
+        },
+        {
+          id: "bean-2",
+          name: "Volcan Roasters - Colombia Pink Bourbon",
+          bagWeight: 250,
+          bagPrice: 7.250,
+          remainingGrams: 232,
+          finished: false
+        }
+      ],
+      brews: [
+        {
+          id: "brew-1",
+          setup: "v60",
+          drink: "V60",
+          beanId: "bean-1",
+          beanName: "Earth Roastery - Ethiopia Yirgacheffe",
+          dose: 18,
+          costPerG: 0.022,
+          cupCost: 0.396,
+          benchmark: 2.000,
+          savings: 1.604,
+          timestamp: Date.now() - (1000 * 60 * 60 * 2)
+        }
+      ],
+      currentDrink: "V60",
+      currentDose: 18,
+      exportFilter: "all"
+    };
+
+    // Load from LocalStorage
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          APP = { ...APP, ...parsed };
+        }
+      } catch (e) {
+        console.warn("Could not parse saved data", e);
+      }
+    }
+
+    // Save to LocalStorage
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(APP));
+      } catch (e) {
+        console.error("Failed to save state", e);
+      }
+    }
+
+    function fmt(val, decimals = 3) {
+      return Number(val || 0).toFixed(decimals);
+    }
+
+    function fmtWithCurr(val, decimals = 3) {
+      return fmt(val, decimals) + " " + APP.currency;
+    }
+
+    function haptic(ms = 12) {
+      if (window.navigator && window.navigator.vibrate) {
+        try { window.navigator.vibrate(ms); } catch (e) {}
+      }
+    }
+
+    /* -------------------------------------------------------------
+       Tab Navigation System
+       ------------------------------------------------------------- */
+    function switchNavTab(tab) {
+      haptic(15);
+      APP.activeTab = tab;
+      
+      const tabs = ['brew', 'roi', 'history', 'pantry'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('navTab' + t.charAt(0).toUpperCase() + t.slice(1));
+        const view = document.getElementById('viewTab' + t.charAt(0).toUpperCase() + t.slice(1));
+
+        if (t === tab) {
+          btn.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 bg-white text-black shadow-sm";
+          view.classList.remove('hidden');
+        } else {
+          btn.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 text-zinc-400 hover:text-white";
+          view.classList.add('hidden');
+        }
+      });
+
+      if (tab === 'roi') renderHero();
+      if (tab === 'history') renderFeed();
+      if (tab === 'pantry') renderPantryData();
+      if (tab === 'brew') renderQuickLogger();
+
+      refreshIcons();
+    }
+
+    function computeAnalytics() {
+      const mode = APP.activeMode;
+      const gearCost = APP.equipment.reduce((sum, item) => {
+        const itemSetup = item.setup || 'v60';
+        if (itemSetup === mode) return sum + Number(item.price || 0);
+        if (itemSetup === 'shared') return sum + (Number(item.price || 0) * 0.5);
+        return sum;
+      }, 0);
+
+      const relevantBrews = APP.brews.filter(b => {
+        if (b.setup) return b.setup === mode;
+        return mode === 'v60' ? (b.drink.includes('V60') || b.drink.includes('Moka') || b.drink.includes('Switch')) : !b.drink.includes('V60');
+      });
+
+      let totalSpentOnBeans = 0;
+      let totalSaved = 0;
+
+      relevantBrews.forEach(b => {
+        totalSpentOnBeans += b.cupCost;
+        totalSaved += b.savings;
+      });
+
+      const totalCups = relevantBrews.length;
+      const avgCostPerCup = totalCups > 0 ? (totalSpentOnBeans / totalCups) : 0;
+      const remainingCost = Math.max(0, gearCost - totalSaved);
+      const isProfitable = totalSaved >= gearCost && gearCost > 0;
+      const netProfit = Math.max(0, totalSaved - gearCost);
+      const progressPct = gearCost > 0 ? Math.min(100, (totalSaved / gearCost) * 100) : (totalSaved > 0 ? 100 : 0);
+
+      return {
+        gearCost,
+        totalSpentOnBeans,
+        totalSaved,
+        totalCups,
+        avgCostPerCup,
+        remainingCost,
+        isProfitable,
+        netProfit,
+        progressPct
+      };
+    }
+
+    function switchMode(mode) {
+      haptic(15);
+      APP.activeMode = mode;
+      
+      const btnV60 = document.getElementById('tabBtnV60');
+      const btnEsp = document.getElementById('tabBtnEspresso');
+
+      if (mode === 'v60') {
+        btnV60.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 bg-white text-black shadow-sm";
+        btnEsp.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white";
+      } else {
+        btnEsp.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 bg-white text-black shadow-sm";
+        btnV60.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white";
+      }
+
+      saveState();
+      renderHero();
+    }
+
+    function renderHero() {
+      const a = computeAnalytics();
+      const heroStatusLabel = document.getElementById('heroStatusLabel');
+      const heroMainAmount = document.getElementById('heroMainAmount');
+      const heroProgressBar = document.getElementById('heroProgressBar');
+      const heroPercentBadge = document.getElementById('heroPercentBadge');
+      const heroModePill = document.getElementById('heroModePill');
+
+      heroModePill.textContent = APP.activeMode === 'v60' ? "V60" : "ESPRESSO";
+      document.getElementById('statCupsCount').textContent = a.totalCups;
+      document.getElementById('statTotalSaved').textContent = (a.totalSaved >= 0 ? "+" : "") + fmtWithCurr(a.totalSaved);
+      document.getElementById('statGearTotal').textContent = fmtWithCurr(a.gearCost);
+      document.getElementById('heroCurrencyBadge').textContent = APP.currency;
+
+      heroPercentBadge.textContent = `${Math.round(a.progressPct)}% Amortized`;
+      heroProgressBar.style.width = `${a.progressPct}%`;
+
+      if (a.isProfitable) {
+        heroStatusLabel.innerHTML = `<span class="px-1.5 py-0.5 rounded bg-emerald-950 text-[10px] text-emerald-400 font-semibold border border-emerald-800">${APP.activeMode.toUpperCase()}</span> <span class="text-emerald-400 font-bold">Net Profit</span>`;
+        heroMainAmount.textContent = "+" + fmt(a.netProfit);
+        heroMainAmount.className = "text-3xl sm:text-4xl font-black tracking-tight text-emerald-400 mono-num";
+        heroProgressBar.className = "h-full bg-emerald-500 transition-all duration-500";
+      } else {
+        heroStatusLabel.innerHTML = `<span class="px-1.5 py-0.5 rounded bg-surface-elevated text-[10px] text-zinc-300 font-semibold border border-surface-borderSubtle">${APP.activeMode.toUpperCase()}</span> <span class="text-zinc-400">Break-Even</span>`;
+        heroMainAmount.textContent = fmt(a.remainingCost);
+        heroMainAmount.className = "text-3xl sm:text-4xl font-black tracking-tight text-white mono-num";
+        heroProgressBar.className = "h-full bg-white transition-all duration-500";
+      }
+    }
+
+    /* -------------------------------------------------------------
+       Quick Logger & Synchronized Slider / Dropdown Handling
+       ------------------------------------------------------------- */
+    function renderQuickLogger() {
+      const beanSelect = document.getElementById('quickBeanSelect');
+      const warningEl = document.getElementById('noActiveBeansWarning');
+      const logBtn = document.getElementById('inlineLogBtn');
+
+      const activeBeans = APP.beans.filter(b => !b.finished);
+
+      if (activeBeans.length === 0) {
+        beanSelect.innerHTML = `<option value="">(No active bags - all finished)</option>`;
+        beanSelect.disabled = true;
+        warningEl.classList.remove('hidden');
+        logBtn.disabled = true;
+        logBtn.classList.add('opacity-50');
+      } else {
+        beanSelect.disabled = false;
+        warningEl.classList.add('hidden');
+        logBtn.disabled = false;
+        logBtn.classList.remove('opacity-50');
+
+        const currentSelected = beanSelect.value;
+        beanSelect.innerHTML = activeBeans.map(b => {
+          const costPerG = b.bagWeight > 0 ? (b.bagPrice / b.bagWeight) : 0;
+          return `<option value="${b.id}">${b.name} (${b.remainingGrams}g left • ${fmt(costPerG, 3)} ${APP.currency}/g)</option>`;
+        }).join('');
+
+        if (currentSelected && activeBeans.some(b => b.id === currentSelected)) {
+          beanSelect.value = currentSelected;
+        }
+      }
+
+      updateInlineCalculations();
+    }
+
+    function handleDrinkSelectChange() {
+      haptic(10);
+      const drinkSelect = document.getElementById('quickDrinkSelect');
+      const selectedOpt = drinkSelect.options[drinkSelect.selectedIndex];
+      const drink = drinkSelect.value;
+      const setup = selectedOpt.getAttribute('data-setup') || 'v60';
+
+      APP.currentDrink = drink;
+      document.getElementById('drinkSetupBadge').textContent = setup === 'espresso' ? "Espresso Bar Setup" : "V60 Filter Setup";
+
+      updateInlineCalculations();
+    }
+
+    function handleBeanSelectChange() {
+      haptic(8);
+      updateInlineCalculations();
+    }
+
+    function handleDoseSlider(val) {
+      APP.currentDose = parseFloat(val);
+      document.getElementById('customDoseInput').value = val;
+      updateDoseChipStyles(val);
+      updateInlineCalculations();
+    }
+
+    function handleDoseInput(val) {
+      const parsed = parseFloat(val);
+      if (!isNaN(parsed) && parsed > 0) {
+        APP.currentDose = parsed;
+        const slider = document.getElementById('doseSlider');
+        if (parsed >= slider.min && parsed <= slider.max) {
+          slider.value = parsed;
+        }
+        updateDoseChipStyles(parsed);
+        updateInlineCalculations();
+      }
+    }
+
+    function setQuickDose(val) {
+      haptic(10);
+      APP.currentDose = val;
+      document.getElementById('customDoseInput').value = val;
+      document.getElementById('doseSlider').value = val;
+      updateDoseChipStyles(val);
+      updateInlineCalculations();
+    }
+
+    function updateDoseChipStyles(val) {
+      document.querySelectorAll('.dose-chip').forEach(btn => {
+        if (parseFloat(btn.textContent) === parseFloat(val)) {
+          btn.className = "dose-chip flex-1 py-1 rounded-lg bg-white text-black font-bold text-center text-[11px] transition shadow-sm";
+        } else {
+          btn.className = "dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition";
+        }
+      });
+    }
+
+    function updateInlineCalculations() {
+      const beanSelect = document.getElementById('quickBeanSelect');
+      const beanId = beanSelect.value;
+      const bean = APP.beans.find(b => b.id === beanId);
+      const dose = APP.currentDose || 18;
+      const drink = APP.currentDrink || "V60";
+      const benchmark = APP.benchmarks[drink] || 2.000;
+
+      let costPerG = 0;
+      if (bean && bean.bagWeight > 0) {
+        costPerG = bean.bagPrice / bean.bagWeight;
+      }
+
+      const cupCost = dose * costPerG;
+      const savings = benchmark - cupCost;
+
+      document.getElementById('inlinePreviewCost').textContent = fmtWithCurr(cupCost);
+      document.getElementById('inlinePreviewSavings').textContent = (savings >= 0 ? "+" : "") + fmtWithCurr(savings);
+      document.getElementById('inlineLogSavingsBadge').textContent = `(+${fmtWithCurr(savings)})`;
+    }
+
+    function logBrewNow() {
+      haptic(20);
+      const activeBeans = APP.beans.filter(b => !b.finished);
+      if (activeBeans.length === 0) {
+        showMinimalConfirm("All Beans Finished", "Please add a new bean bag or reactivate one in the Pantry tab.", () => {
+          switchNavTab('pantry');
+        }, true);
+        return;
+      }
+
+      const beanSelect = document.getElementById('quickBeanSelect');
+      const beanId = beanSelect.value;
+      const bean = APP.beans.find(b => b.id === beanId);
+      if (!bean) return;
+
+      const drinkSelect = document.getElementById('quickDrinkSelect');
+      const selectedOpt = drinkSelect.options[drinkSelect.selectedIndex];
+      const drink = drinkSelect.value;
+      const setup = selectedOpt.getAttribute('data-setup') || 'v60';
+      const dose = APP.currentDose || 18;
+      const benchmark = APP.benchmarks[drink] || 2.000;
+      const costPerG = bean.bagWeight > 0 ? (bean.bagPrice / bean.bagWeight) : 0;
+      const cupCost = dose * costPerG;
+      const savings = benchmark - cupCost;
+
+      // Deduct bean inventory
+      bean.remainingGrams = Math.max(0, bean.remainingGrams - dose);
+
+      const newBrew = {
+        id: "brew-" + Date.now(),
+        setup,
+        drink,
+        beanId: bean.id,
+        beanName: bean.name,
+        dose,
+        costPerG,
+        cupCost,
+        benchmark,
+        savings,
+        timestamp: Date.now()
+      };
+
+      APP.brews.unshift(newBrew);
+      saveState();
+
+      renderQuickLogger();
+      renderHero();
+      renderFeed();
+      renderPantryData();
+      showToast(`Logged ${drink} (${dose}g) • Saved +${fmtWithCurr(savings)}`);
+    }
+
+    /* -------------------------------------------------------------
+       Beans & Pantry: "Bag Finished" (Archive) System
+       ------------------------------------------------------------- */
+    function markBeanFinished(id) {
+      haptic(15);
+      const bean = APP.beans.find(b => b.id === id);
+      if (!bean) return;
+
+      showMinimalConfirm("Mark Bag as Finished?", `Archive "${bean.name}"? It will be hidden from the daily brew logger while retaining past brew logs.`, () => {
+        bean.finished = true;
+        saveState();
+        renderPantryData();
+        renderQuickLogger();
+        showToast(`Archived "${bean.name}"`);
+      });
+    }
+
+    function reactivateBean(id) {
+      haptic(15);
+      const bean = APP.beans.find(b => b.id === id);
+      if (!bean) return;
+
+      bean.finished = false;
+      saveState();
+      renderPantryData();
+      renderQuickLogger();
+      showToast(`Reactivated "${bean.name}" to in-stock!`);
+    }
+
+    function renderPantryData() {
+      // Sync Baselines
+      document.getElementById('benchInputV60').value = APP.benchmarks["V60"] || 2.000;
+      document.getElementById('benchInputEspresso').value = APP.benchmarks["Espresso"] || 1.250;
+      document.getElementById('benchInputMilk').value = APP.benchmarks["Flat White"] || 1.750;
+      document.getElementById('benchInputCortado').value = APP.benchmarks["Cortado"] || 1.500;
+      document.getElementById('settingCurrency').value = APP.currency || "KD";
+
+      document.querySelectorAll('.currency-label').forEach(el => el.textContent = APP.currency);
+
+      const activeBeans = APP.beans.filter(b => !b.finished);
+      const finishedBeans = APP.beans.filter(b => b.finished);
+
+      document.getElementById('finishedBagsCountBadge').textContent = `${finishedBeans.length} bags`;
+
+      // Render Active Beans
+      const activeBeansListEl = document.getElementById('drawerBeansList');
+      if (activeBeans.length === 0) {
+        activeBeansListEl.innerHTML = `<div class="p-3 bg-surface-elevated rounded-xl border border-surface-borderSubtle text-zinc-500 text-center text-xs">No active coffee bags in pantry.</div>`;
+      } else {
+        activeBeansListEl.innerHTML = activeBeans.map(bean => {
+          const costG = bean.bagWeight > 0 ? (bean.bagPrice / bean.bagWeight) : 0;
+          return `
+            <div class="p-3 rounded-xl bg-surface-elevated border border-surface-border text-xs space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="truncate">
+                  <div class="font-bold text-white truncate">${bean.name}</div>
+                  <div class="text-[10px] text-zinc-400 mt-0.5">
+                    ${bean.remainingGrams}g left of ${bean.bagWeight}g • ${fmt(costG, 3)} ${APP.currency}/g
+                  </div>
+                </div>
+                <button onclick="deleteBean('${bean.id}')" class="text-zinc-500 hover:text-red-400 p-1 shrink-0" title="Delete bean">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between pt-1 border-t border-surface-borderSubtle gap-2">
+                <button onclick="promptEditBeanRemaining('${bean.id}')" class="px-2 py-1 rounded bg-black text-zinc-300 text-[10px] border border-surface-borderSubtle hover:text-white">
+                  Reset ${bean.bagWeight}g
+                </button>
+                <button onclick="markBeanFinished('${bean.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 text-[10px] border border-emerald-800/80 font-bold flex items-center gap-1 active:scale-95 transition">
+                  <i data-lucide="check-circle" class="w-3 h-3"></i>
+                  <span>Bag Finished</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Finished Beans in Archive
+      const finishedBeansListEl = document.getElementById('finishedBeansList');
+      if (finishedBeans.length === 0) {
+        finishedBeansListEl.innerHTML = `<div class="p-2 text-zinc-600 text-center text-[11px]">No archived bags.</div>`;
+      } else {
+        finishedBeansListEl.innerHTML = finishedBeans.map(bean => {
+          return `
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-[#0e0e0e] border border-surface-borderSubtle text-xs">
+              <div class="truncate max-w-[190px]">
+                <div class="text-zinc-400 line-through truncate">${bean.name}</div>
+                <div class="text-[9px] text-zinc-600">${bean.bagWeight}g bag • ${fmtWithCurr(bean.bagPrice)}</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="reactivateBean('${bean.id}')" class="px-2 py-1 rounded bg-surface-elevated hover:bg-[#222] text-zinc-300 hover:text-white text-[10px] border border-surface-border flex items-center gap-1">
+                  <i data-lucide="rotate-ccw" class="w-3 h-3 text-emerald-400"></i>
+                  <span>Reactivate</span>
+                </button>
+                <button onclick="deleteBean('${bean.id}')" class="text-zinc-600 hover:text-red-400 p-1">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Equipment
+      document.getElementById('gearCountBadge').textContent = `${APP.equipment.length} items`;
+      const gearListEl = document.getElementById('drawerGearList');
+      if (APP.equipment.length === 0) {
+        gearListEl.innerHTML = `<div class="p-2 text-zinc-500 text-center">No tools logged.</div>`;
+      } else {
+        gearListEl.innerHTML = APP.equipment.map(item => {
+          const badgeClass = item.setup === 'espresso'
+            ? 'bg-amber-950/60 text-amber-400 border-amber-800/60'
+            : (item.setup === 'shared' ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60');
+          const badgeText = item.setup === 'espresso' ? 'Espresso' : (item.setup === 'shared' ? 'Shared' : 'V60');
+
+          return `
+            <div class="flex items-center justify-between p-2 rounded-lg bg-surface-elevated border border-surface-border text-[11px]">
+              <div class="truncate max-w-[180px]">
+                <div class="text-white truncate">${item.name}</div>
+                <span class="inline-block mt-0.5 text-[9px] px-1 py-0.2 rounded border font-mono ${badgeClass}">${badgeText}</span>
+              </div>
+              <div class="flex items-center gap-2 font-mono">
+                <span class="text-zinc-300">${fmtWithCurr(item.price)}</span>
+                <button onclick="deleteGear('${item.id}')" class="text-zinc-500 hover:text-red-400 p-1">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      refreshIcons();
+    }
+
+    function renderFeed() {
+      const listEl = document.getElementById('brewFeedList');
+      const emptyEl = document.getElementById('feedEmptyState');
+      const badgeEl = document.getElementById('feedCountBadge');
+      const repeatLastBtn = document.getElementById('repeatLastBtn');
+
+      badgeEl.textContent = `${APP.brews.length} brews total`;
+
+      if (repeatLastBtn) {
+        if (APP.brews.length > 0) {
+          repeatLastBtn.classList.remove('hidden');
+          repeatLastBtn.title = `Duplicate last brew (${APP.brews[0].drink}, ${APP.brews[0].dose}g)`;
+        } else {
+          repeatLastBtn.classList.add('hidden');
+        }
+      }
+
+      if (APP.brews.length === 0) {
+        listEl.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      listEl.innerHTML = APP.brews.map(b => {
+        const timeStr = formatRelativeTime(b.timestamp);
+        return `
+          <div id="cupRow-${b.id}" class="group relative overflow-hidden rounded-xl bg-surface-card border border-surface-border p-3 transition hover:border-surface-borderSubtle flex items-center justify-between">
+            <div class="space-y-0.5 max-w-[62%]">
+              <div class="text-xs font-semibold text-white tracking-tight flex items-center gap-1.5">
+                <span class="px-1 py-0.2 rounded text-[9px] font-mono ${b.setup === 'espresso' ? 'bg-amber-950 text-amber-300' : 'bg-emerald-950 text-emerald-300'}">${b.drink}</span>
+                <span class="text-zinc-500">•</span>
+                <span class="text-zinc-300 font-normal truncate max-w-[140px]">${b.beanName}</span>
+              </div>
+              <div class="text-[10px] font-mono text-zinc-500">
+                ${timeStr} • ${b.dose}g
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <div class="text-right font-mono pr-1">
+                <div class="text-xs font-bold text-emerald-400">+${fmt(b.savings)} <span class="text-[10px]">${APP.currency}</span></div>
+                <div class="text-[10px] text-zinc-500">Cost: ${fmt(b.cupCost)}</div>
+              </div>
+              <button onclick="duplicateCup('${b.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-surface-elevated active:scale-90 transition" title="Brew this again">
+                <i data-lucide="copy-plus" class="w-3.5 h-3.5 text-zinc-300"></i>
+              </button>
+              <button onclick="deleteCup('${b.id}')" class="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-surface-elevated active:scale-90 transition" title="Delete cup">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      refreshIcons();
+    }
+
+    function duplicateCup(id) {
+      haptic(20);
+      const original = APP.brews.find(b => b.id === id);
+      if (!original) return;
+
+      let bean = APP.beans.find(b => b.id === original.beanId && !b.finished);
+      if (!bean) {
+        bean = APP.beans.find(b => !b.finished);
+        if (!bean) {
+          showToast("No active beans available. Add or unmark a bag in Pantry.");
+          return;
+        }
+      }
+
+      const dose = original.dose || 18;
+      const costPerG = bean.bagWeight > 0 ? (bean.bagPrice / bean.bagWeight) : (original.costPerG || 0);
+      const cupCost = dose * costPerG;
+      const benchmark = APP.benchmarks[original.drink] || original.benchmark || 2.000;
+      const savings = benchmark - cupCost;
+
+      bean.remainingGrams = Math.max(0, bean.remainingGrams - dose);
+
+      const newBrew = {
+        id: "brew-" + Date.now(),
+        setup: original.setup || 'v60',
+        drink: original.drink,
+        beanId: bean.id,
+        beanName: bean.name,
+        dose,
+        costPerG,
+        cupCost,
+        benchmark,
+        savings,
+        timestamp: Date.now()
+      };
+
+      APP.brews.unshift(newBrew);
+      saveState();
+
+      renderQuickLogger();
+      renderFeed();
+      renderHero();
+      renderPantryData();
+      showToast(`Brewed again: ${original.drink} (${dose}g) • Saved +${fmtWithCurr(savings)}`);
+    }
+
+    function duplicateLastBrew() {
+      if (APP.brews.length > 0) {
+        duplicateCup(APP.brews[0].id);
+      } else {
+        showToast("No previous brew to duplicate");
+      }
+    }
+
+    function formatRelativeTime(ts) {
+      const diffSec = Math.floor((Date.now() - ts) / 1000);
+      if (diffSec < 60) return "Just now";
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+      const date = new Date(ts);
+      return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+
+    function deleteCup(id) {
+      haptic(20);
+      const index = APP.brews.findIndex(b => b.id === id);
+      if (index === -1) return;
+
+      const deletedCup = APP.brews.splice(index, 1)[0];
+
+      // Automatic inventory rollback: refund dose back to bean bag
+      const bean = APP.beans.find(b => b.id === deletedCup.beanId);
+      if (bean) {
+        bean.remainingGrams = Math.min(bean.bagWeight * 2, bean.remainingGrams + deletedCup.dose);
+      }
+
+      saveState();
+      renderHero();
+      renderFeed();
+      renderQuickLogger();
+      renderPantryData();
+
+      showUndoToast(`Deleted ${deletedCup.drink} (${deletedCup.dose}g refunded)`, () => {
+        undoDeleteCup(deletedCup, index);
+      });
+    }
+
+    function undoDeleteCup(cup, originalIndex) {
+      haptic(25);
+      const bean = APP.beans.find(b => b.id === cup.beanId);
+      if (bean) {
+        bean.remainingGrams = Math.max(0, bean.remainingGrams - cup.dose);
+      }
+
+      APP.brews.splice(originalIndex, 0, cup);
+      saveState();
+
+      renderHero();
+      renderFeed();
+      renderQuickLogger();
+      renderPantryData();
+      showToast(`Restored ${cup.drink} cup.`);
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = "pointer-events-auto bg-[#181818] border border-surface-border text-white text-[11px] font-mono px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2 slide-up-enter";
+      toast.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> <span>${message}</span>`;
+      container.innerHTML = '';
+      container.appendChild(toast);
+      refreshIcons();
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 250);
+      }, 2500);
+    }
+
+    function showUndoToast(message, undoCallback) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = "pointer-events-auto bg-[#181818] border border-[#2a2a2a] text-white text-[11px] font-mono px-3.5 py-2.5 rounded-xl shadow-2xl flex items-center justify-between gap-4 slide-up-enter w-full max-w-xs";
+      toast.innerHTML = `
+        <span class="truncate text-zinc-300">${message}</span>
+        <button id="undoActionBtn" class="px-2 py-0.5 rounded bg-white text-black font-bold text-[10px] active:scale-95 transition">
+          UNDO
+        </button>
+      `;
+      container.innerHTML = '';
+      container.appendChild(toast);
+
+      let triggered = false;
+      document.getElementById('undoActionBtn').addEventListener('click', () => {
+        if (!triggered) {
+          triggered = true;
+          toast.remove();
+          undoCallback();
+        }
+      });
+
+      setTimeout(() => {
+        if (!triggered) {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 250);
+        }
+      }, 5000);
+    }
+
+    function toggleBeanForm(forceOpen = false) {
+      const form = document.getElementById('addBeanForm');
+      if (forceOpen) form.classList.remove('hidden');
+      else form.classList.toggle('hidden');
+    }
+
+    function handleAddBeanSubmit(e) {
+      e.preventDefault();
+      haptic(15);
+      const name = document.getElementById('newBeanName').value.trim();
+      const weight = parseFloat(document.getElementById('newBeanWeight').value);
+      const price = parseFloat(document.getElementById('newBeanPrice').value);
+
+      if (!name || isNaN(weight) || isNaN(price)) return;
+
+      const newBean = {
+        id: "bean-" + Date.now(),
+        name,
+        bagWeight: weight,
+        bagPrice: price,
+        remainingGrams: weight,
+        finished: false
+      };
+
+      APP.beans.push(newBean);
+      saveState();
+
+      document.getElementById('newBeanName').value = '';
+      toggleBeanForm();
+      renderPantryData();
+      renderQuickLogger();
+      showToast(`Added bean "${name}"`);
+    }
+
+    function deleteBean(id) {
+      const bean = APP.beans.find(b => b.id === id);
+      if (!bean) return;
+      showMinimalConfirm("Delete Bean?", `Permanently remove "${bean.name}"? Past brew history will remain.`, () => {
+        APP.beans = APP.beans.filter(b => b.id !== id);
+        saveState();
+        renderPantryData();
+        renderQuickLogger();
+        showToast("Bean removed.");
+      });
+    }
+
+    function promptEditBeanRemaining(id) {
+      const bean = APP.beans.find(b => b.id === id);
+      if (!bean) return;
+      showMinimalConfirm("Reset to full bag?", `Reset remaining grams of "${bean.name}" back to ${bean.bagWeight}g?`, () => {
+        bean.remainingGrams = bean.bagWeight;
+        saveState();
+        renderPantryData();
+        renderQuickLogger();
+        showToast("Bean grams reset.");
+      });
+    }
+
+    function toggleGearForm(forceOpen = false) {
+      const form = document.getElementById('addGearForm');
+      if (forceOpen) form.classList.remove('hidden');
+      else form.classList.toggle('hidden');
+    }
+
+    function handleAddGearSubmit(e) {
+      e.preventDefault();
+      haptic(15);
+      const name = document.getElementById('newGearName').value.trim();
+      const price = parseFloat(document.getElementById('newGearPrice').value);
+      const setup = document.getElementById('newGearSetup').value || 'v60';
+
+      if (!name || isNaN(price)) return;
+
+      APP.equipment.push({
+        id: "eq-" + Date.now(),
+        name,
+        price,
+        setup
+      });
+      saveState();
+
+      document.getElementById('newGearName').value = '';
+      document.getElementById('newGearPrice').value = '';
+      toggleGearForm();
+      renderPantryData();
+      renderHero();
+      showToast(`Added gear "${name}"`);
+    }
+
+    function deleteGear(id) {
+      const item = APP.equipment.find(g => g.id === id);
+      if (!item) return;
+      showMinimalConfirm("Delete Tool?", `Remove "${item.name}" from fixed gear amortized cost?`, () => {
+        APP.equipment = APP.equipment.filter(g => g.id !== id);
+        saveState();
+        renderPantryData();
+        renderHero();
+        showToast("Gear removed.");
+      });
+    }
+
+    function saveBenchmarks() {
+      haptic(10);
+      const v60 = parseFloat(document.getElementById('benchInputV60').value);
+      const esp = parseFloat(document.getElementById('benchInputEspresso').value);
+      const milk = parseFloat(document.getElementById('benchInputMilk').value);
+      const cortado = parseFloat(document.getElementById('benchInputCortado').value);
+      const curr = document.getElementById('settingCurrency').value.trim().toUpperCase() || "KD";
+
+      if (!isNaN(v60)) {
+        APP.benchmarks["V60"] = v60;
+        APP.benchmarks["Switch"] = v60;
+        APP.benchmarks["Moka Pot"] = v60;
+      }
+      if (!isNaN(esp)) APP.benchmarks["Espresso"] = esp;
+      if (!isNaN(milk)) {
+        APP.benchmarks["Flat White"] = milk;
+        APP.benchmarks["Latte"] = milk;
+      }
+      if (!isNaN(cortado)) APP.benchmarks["Cortado"] = cortado;
+      APP.currency = curr;
+
+      saveState();
+      renderHero();
+      renderQuickLogger();
+      renderPantryData();
+    }
+
+    function openExportModal() {
+      haptic(15);
+      const today = new Date().toISOString().split('T')[0];
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+      document.getElementById('exportFromDate').value = thirtyDaysAgo;
+      document.getElementById('exportToDate').value = today;
+      setExportFilter('all');
+      document.getElementById('exportModal').classList.remove('hidden');
+      refreshIcons();
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal').classList.add('hidden');
+    }
+
+    function setExportFilter(type) {
+      haptic(10);
+      APP.exportFilter = type;
+      ['all', 'month', 'custom'].forEach(t => {
+        const btn = document.getElementById('expBtn' + (t === 'all' ? 'All' : (t === 'month' ? 'Month' : 'Custom')));
+        if (t === type) {
+          btn.className = "py-1.5 rounded-lg bg-white text-black font-semibold text-center";
+        } else {
+          btn.className = "py-1.5 rounded-lg bg-surface-elevated text-zinc-400 border border-surface-border text-center hover:text-white";
+        }
+      });
+
+      const customBox = document.getElementById('customExportDates');
+      if (type === 'custom') customBox.classList.remove('hidden');
+      else customBox.classList.add('hidden');
+
+      buildExportText();
+    }
+
+    function buildExportText() {
+      let filtered = [...APP.brews];
+      const now = Date.now();
+
+      if (APP.exportFilter === 'month') {
+        const threshold = now - (30 * 86400000);
+        filtered = filtered.filter(b => b.timestamp >= threshold);
+      } else if (APP.exportFilter === 'custom') {
+        const fromVal = document.getElementById('exportFromDate').value;
+        const toVal = document.getElementById('exportToDate').value;
+        if (fromVal) filtered = filtered.filter(b => b.timestamp >= new Date(fromVal).getTime());
+        if (toVal) filtered = filtered.filter(b => b.timestamp <= new Date(toVal).getTime() + 86400000);
+      }
+
+      let totalCost = 0;
+      let totalSaved = 0;
+
+      const lines = filtered.map(b => {
+        totalCost += b.cupCost;
+        totalSaved += b.savings;
+        const dateStr = new Date(b.timestamp).toISOString().split('T')[0];
+        const setupStr = (b.setup || 'v60').toUpperCase();
+        return `${dateStr} | [${setupStr}] ${b.drink} | ${b.beanName} | ${b.dose}g | Cost: ${fmt(b.cupCost)} ${APP.currency} | Saved: ${fmt(b.savings)} ${APP.currency}`;
+      });
+
+      const summary = `---
+Total Cups: ${filtered.length} | Total Spent on Beans: ${fmt(totalCost)} ${APP.currency} | Total Saved: ${fmt(totalSaved)} ${APP.currency}`;
+
+      const fullText = lines.length > 0 ? (lines.join('\n') + '\n' + summary) : "No coffee brews found in selected range.";
+      document.getElementById('exportPreviewArea').value = fullText;
+    }
+
+    function executeClipboardCopy() {
+      haptic(20);
+      const textarea = document.getElementById('exportPreviewArea');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch (e) {
+        ok = false;
+      }
+
+      if (ok) {
+        showToast("Copied log to clipboard");
+        closeExportModal();
+      } else {
+        showToast("Press and hold text to copy");
+      }
+    }
+
+    function showMinimalConfirm(title, message, onOk, isAlertOnly = false) {
+      haptic(15);
+      const dialog = document.getElementById('minimalConfirmDialog');
+      const titleEl = document.getElementById('confirmDialogTitle');
+      const msgEl = document.getElementById('confirmDialogMsg');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+      const okBtn = document.getElementById('confirmOkBtn');
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+
+      if (isAlertOnly) {
+        cancelBtn.classList.add('hidden');
+        okBtn.textContent = "OK";
+      } else {
+        cancelBtn.classList.remove('hidden');
+        okBtn.textContent = "Confirm";
+      }
+
+      dialog.classList.remove('hidden');
+
+      const handleOk = () => {
+        dialog.classList.add('hidden');
+        cleanup();
+        if (onOk) onOk();
+      };
+      const handleCancel = () => {
+        dialog.classList.add('hidden');
+        cleanup();
+      };
+      function cleanup() {
+        okBtn.removeEventListener('click', handleOk);
+        cancelBtn.removeEventListener('click', handleCancel);
+      }
+      okBtn.addEventListener('click', handleOk);
+      cancelBtn.addEventListener('click', handleCancel);
+    }
+
+    function refreshIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    // Dynamic Web App Manifest Injection for Chrome Homescreen Install
+    function setupAppIconAndManifest() {
+      const manifest = {
+        name: "BrewLog ROI",
+        short_name: "BrewLog",
+        start_url: "./index.html",
+        display: "standalone",
+        background_color: "#000000",
+        theme_color: "#000000",
+        orientation: "portrait"
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+      const manifestUrl = URL.createObjectURL(blob);
+      let link = document.querySelector('link[rel="manifest"]');
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'manifest';
+        document.head.appendChild(link);
+      }
+      link.href = manifestUrl;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      setupAppIconAndManifest();
+      renderQuickLogger();
+      renderHero();
+      renderFeed();
+      renderPantryData();
+      refreshIcons();
+    });
+  </script>
+</body>
+</html>
