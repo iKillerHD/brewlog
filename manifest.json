@@ -1,0 +1,18 @@
+{
+  "background_color": "#000000",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "BrewLog",
+  "orientation": "portrait",
+  "scope": "/brewlog/",
+  "short_name": "BrewLog",
+  "start_url": "/brewlog/",
+  "theme_color": "#000000",
+  "description": "Home coffee brewing cost and break-even tracker.",
+  "id": "BrewLog",
+  "lang": "en",
+  "categories": [
+    "finance",
+    "food"
+  ]
+}
