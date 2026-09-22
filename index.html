@@ -7,11 +7,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>BrewLog ROI</title>
-<link rel="manifest" href="manifest.json">
-  
+  <title>BrewLog</title>
+  <link rel="manifest" href="manifest.json">
+
   <style>
-    /* ZERO-DEPENDENCY OLED DESIGN SYSTEM */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -21,1603 +20,1546 @@
     }
     :root {
       --bg: #000000;
-      --card: #121212;
-      --card-hover: #181818;
-      --elevated: #1e1e1e;
-      --border: #262626;
-      --border-subtle: #1c1c1c;
+      --card: #111111;
+      --card-subtle: #161616;
+      --border: #222222;
+      --border-focus: #3b3b3b;
       --text: #ffffff;
-      --text-muted: #888888;
-      --emerald: #10b981;
-      --emerald-dark: #064e3b;
-      --amber: #f59e0b;
-      --amber-dark: #78350f;
-      --red: #ef4444;
-      --red-dark: #450a0a;
-      --mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      --text-muted: #737373;
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.12);
+      --danger: #ef4444;
+      --danger-dim: rgba(239, 68, 68, 0.12);
     }
     body {
       background-color: var(--bg);
       color: var(--text);
-      font-family: var(--sans);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       min-height: 100vh;
       display: flex;
       justify-content: center;
+      padding: env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 24px) 16px;
       overflow-x: hidden;
-      font-size: 13px;
-      line-height: 1.4;
       user-select: none;
-      -webkit-user-select: none;
     }
-    .mono { font-family: var(--mono); }
-    .mono-num {
-      font-family: var(--mono);
-      font-feature-settings: "tnum" 1;
-      font-variant-numeric: tabular-nums;
-    }
-    #appContainer {
+    .app-container {
       width: 100%;
       max-width: 440px;
-      min-height: 100vh;
-      background-color: var(--bg);
       display: flex;
       flex-direction: column;
-      padding: 12px 14px 40px 14px;
-      border-left: 1px solid var(--border-subtle);
-      border-right: 1px solid var(--border-subtle);
-      position: relative;
+      gap: 16px;
     }
-    /* HEADER */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 8px 0 10px 0;
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Top Navigation */
+    .top-bar {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border);
+      align-items: center;
+      padding-top: 6px;
     }
-    .brand-title {
-      font-family: var(--mono);
-      font-weight: 900;
-      font-size: 14px;
-      letter-spacing: 0.12em;
+    .brand {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: var(--text);
     }
-    .brand-tag {
-      font-size: 10px;
-      color: var(--text-muted);
-      font-weight: 400;
-      margin-left: 2px;
-    }
-    .btn-header {
-      background: var(--card);
+    .btn-ghost {
+      background: transparent;
       border: 1px solid var(--border);
-      color: #ddd;
-      border-radius: 8px;
-      padding: 5px 10px;
-      font-size: 11px;
-      font-family: var(--mono);
-      display: flex;
-      align-items: center;
-      gap: 5px;
+      color: var(--text);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .btn-header:active { transform: scale(0.96); background: var(--elevated); }
+    .btn-ghost:active {
+      background: var(--card-subtle);
+    }
 
-    /* NAV TABS */
-    nav.tab-bar {
+    /* Tab Switcher */
+    .tab-nav {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 4px;
-      margin-top: 10px;
-      position: sticky;
-      top: 50px;
-      z-index: 20;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
     }
     .tab-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 8px 4px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-family: var(--mono);
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 0;
+      border-radius: 6px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      transition: all 0.15s ease;
+      text-align: center;
+      transition: color 0.15s ease, background 0.15s ease;
     }
     .tab-btn.active {
-      background: #ffffff;
-      color: #000000;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      background: #202020;
+      color: var(--text);
     }
 
-    /* CARDS & PANELS */
+    /* Views */
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .hidden {
+      display: none !important;
+    }
+
+    /* Cards */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      margin-top: 12px;
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
-    .form-group {
-      margin-bottom: 12px;
-    }
-    .form-label {
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    /* Inputs */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      background: #080808;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+    }
+    select:focus, input[type="text"]:focus, input[type="number"]:focus {
+      border-color: var(--border-focus);
+    }
+
+    /* Range Slider */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: #2a2a2a;
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--text);
+      cursor: pointer;
+    }
+    .dose-input-box {
+      width: 78px;
+      display: flex;
+      align-items: center;
+      background: #080808;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+    .dose-input-box input {
+      width: 44px;
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      text-align: right;
+    }
+    .dose-input-box span {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+
+    /* Preset Chips */
+    .chip-group {
+      display: flex;
+      gap: 6px;
+    }
+    .chip {
+      flex: 1;
+      background: #171717;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 6px 0;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+    }
+    .chip.active {
+      border-color: #3f3f3f;
+      color: var(--text);
+      background: #242424;
+    }
+
+    /* Metrics Summary Box */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: #090909;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .metric-label {
       font-size: 11px;
-      font-family: var(--mono);
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: 6px;
     }
-    .badge {
-      font-size: 9px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--elevated);
-      color: #ccc;
+    .metric-val {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
     }
-
-    /* INPUTS & SELECTS */
-    select, input[type="text"], input[type="number"], input[type="date"], textarea {
-      width: 100%;
-      background: var(--elevated);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: #ffffff;
-      font-family: var(--mono);
-      font-size: 12px;
-      padding: 9px 12px;
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    select:focus, input:focus, textarea:focus {
-      border-color: #666666;
-    }
-    .select-wrap {
-      position: relative;
-    }
-    .select-arrow {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-      color: var(--text-muted);
-      font-size: 10px;
-    }
-    input[type=range] {
-      width: 100%;
-      height: 6px;
-      background: #282828;
-      border-radius: 4px;
-      outline: none;
-      appearance: none;
-      accent-color: #ffffff;
-      cursor: pointer;
+    .metric-val.saved {
+      color: var(--accent);
     }
 
-    /* QUICK CHIPS */
-    .chip-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .chip-btn {
-      background: var(--elevated);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      border-radius: 8px;
-      padding: 6px 0;
-      text-align: center;
-      font-size: 11px;
-      font-family: var(--mono);
-      cursor: pointer;
-    }
-    .chip-btn.active {
-      background: #ffffff;
-      color: #000000;
-      font-weight: 800;
-      border-color: #ffffff;
-    }
-
-    /* FINANCIAL PREVIEW BANNER */
-    .financial-preview {
-      background: var(--elevated);
-      border: 1px solid var(--border-subtle);
-      border-radius: 12px;
-      padding: 10px 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 12px 0;
-      font-family: var(--mono);
-    }
-    .preview-col-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
-    .preview-col-val { font-size: 12px; font-weight: 800; margin-top: 2px; }
-    .emerald-text { color: var(--emerald); }
-
-    /* ACTION BUTTONS */
-    .btn-main {
+    /* Primary Action Buttons */
+    .btn-primary {
       width: 100%;
       background: #ffffff;
       color: #000000;
       border: none;
-      border-radius: 12px;
-      padding: 13px;
-      font-weight: 800;
-      font-size: 13px;
-      letter-spacing: 0.02em;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+      text-align: center;
     }
-    .btn-main:active { transform: scale(0.98); background: #e5e5e5; }
-    .btn-secondary {
-      background: var(--elevated);
+    .btn-primary:active {
+      opacity: 0.9;
+    }
+    .btn-subtle {
+      background: transparent;
       border: 1px solid var(--border);
-      color: #fff;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 11px;
-      font-family: var(--mono);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
+    }
+    .btn-subtle:active {
+      color: var(--text);
+      border-color: var(--border-focus);
     }
 
-    /* HERO BREAK-EVEN CARD */
-    .hero-stat-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      font-family: var(--mono);
-      color: var(--text-muted);
-      border-top: 1px solid var(--border-subtle);
-      padding-top: 10px;
-      margin-top: 12px;
+    /* Setup Segmented Switcher */
+    .setup-segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #080808;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
     }
-    .progress-track {
+    .setup-seg-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 7px 0;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .setup-seg-btn.active {
+      background: #1c1c1c;
+      color: var(--text);
+    }
+
+    /* ROI Hero Readout */
+    .roi-hero {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .roi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .roi-amount-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .roi-main-val {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1;
+    }
+    .roi-currency {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .progress-bar-wrap {
       width: 100%;
       height: 4px;
-      background: #222222;
-      border-radius: 99px;
+      background: #1c1c1c;
+      border-radius: 2px;
       overflow: hidden;
-      margin: 10px 0 6px 0;
+      margin-top: 4px;
     }
-    .progress-fill {
+    .progress-bar-fill {
       height: 100%;
-      background: #ffffff;
+      background: var(--text);
       width: 0%;
-      transition: width 0.4s ease;
+      transition: width 0.3s ease;
+    }
+    .progress-bar-fill.done {
+      background: var(--accent);
+    }
+    .roi-stats-strip {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
     }
 
-    /* FEED CARDS */
+    /* Feed & List Items */
+    .list-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
     .feed-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
+      border-radius: 8px;
+      padding: 12px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      gap: 12px;
     }
-    .feed-actions {
+    .feed-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .feed-primary {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .feed-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .feed-right {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 10px;
     }
-    .icon-btn {
-      background: var(--elevated);
+    .feed-saving {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .icon-action-btn {
+      background: transparent;
       border: 1px solid var(--border);
-      color: #aaa;
-      border-radius: 6px;
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 500;
       cursor: pointer;
     }
-    .icon-btn:active { transform: scale(0.92); color: #fff; }
-
-    /* MODALS & OVERLAYS */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+    .icon-action-btn:active {
+      color: var(--text);
+      border-color: var(--border-focus);
     }
-    .modal-card {
-      background: var(--card);
+    .icon-action-btn.del:active {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    /* Pantry / Gear Management */
+    .sub-card {
+      background: #0a0a0a;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      width: 100%;
-      max-width: 360px;
-      padding: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-      font-family: var(--mono);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sub-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .empty-state {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 24px 0;
     }
 
-    /* TOAST NOTIFICATION */
+    /* Toast Snackbar */
     #toastContainer {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 1000;
-      pointer-events: none;
-      width: 90%;
-      max-width: 360px;
+      width: calc(100% - 32px);
+      max-width: 408px;
+      z-index: 9999;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
+      pointer-events: none;
     }
-    .toast-msg {
+    .toast {
       pointer-events: auto;
-      background: #1c1c1c;
-      border: 1px solid var(--border);
-      color: #fff;
-      font-size: 11px;
-      font-family: var(--mono);
+      background: #1a1a1a;
+      border: 1px solid #333333;
+      border-radius: 6px;
       padding: 10px 14px;
-      border-radius: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+    }
+    .toast-undo {
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .hidden { display: none !important; }
+    /* Simple Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9000;
+      padding: 16px;
+    }
+    .modal-sheet {
+      background: #121212;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    textarea.export-text {
+      width: 100%;
+      height: 180px;
+      background: #080808;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: #dedede;
+      padding: 10px;
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      outline: none;
+      resize: none;
+      white-space: pre;
+    }
   </style>
 </head>
 <body>
 
-  <div id="appContainer">
+<div class="app-container">
 
-    <!-- HEADER -->
-    <header>
-      <div class="brand-title">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="#10b981">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79.09.43.23.85.42 1.25 1.05 2.16 3.19 3.54 5.57 3.54h.8v4.93zm0-6.93h-.8c-1.68 0-3.19-.98-3.93-2.5-.27-.56-.42-1.18-.42-1.83 0-3.37 2.45-6.17 5.15-6.6v10.93zm2 4.93v-4.93h.8c2.38 0 4.52-1.38 5.57-3.54.19-.4.33-.82.42-1.25.13.58.21 1.17.21 1.79 0 4.08-3.05 7.44-7 7.93zm0-6.93V4.07c2.7.43 5.15 3.23 5.15 6.6 0 .65-.15 1.27-.42 1.83-.74 1.52-2.25 2.5-3.93 2.5h-.8z"/>
-        </svg>
-        <span>BREWLOG</span><span class="brand-tag">ROI</span>
+  <!-- Header -->
+  <header class="top-bar">
+    <div class="brand">BrewLog</div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-ghost" id="openExportBtn">Export</button>
+    </div>
+  </header>
+
+  <!-- 4 Primary Minimal Tabs (No Emojis) -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="view-brew">Brew</button>
+    <button class="tab-btn" data-tab="view-roi">ROI</button>
+    <button class="tab-btn" data-tab="view-logs">Logs</button>
+    <button class="tab-btn" data-tab="view-pantry">Pantry</button>
+  </nav>
+
+  <!-- 1. BREW VIEW -->
+  <section id="view-brew" class="view-section">
+    <div class="card">
+      <div class="card-title">
+        <span>Log Coffee</span>
+        <button class="btn-subtle" id="repeatLastBtn" style="padding: 3px 8px; font-size: 11px;">Repeat Last</button>
       </div>
-      <button type="button" class="btn-header" onclick="openExportModal()">
-        <span>📋</span>
-        <span>Export</span>
+
+      <!-- Drink Type (4 Strict Drinks Only) -->
+      <div class="field-group">
+        <label class="field-label">Drink Type</label>
+        <select id="brewDrinkSelect">
+          <option value="v60">V60</option>
+          <option value="milk">Milk based drink</option>
+          <option value="espresso">Espresso</option>
+          <option value="moka">Moka Pot</option>
+        </select>
+      </div>
+
+      <!-- Bean Selection -->
+      <div class="field-group">
+        <label class="field-label">Bean Bag</label>
+        <select id="brewBeanSelect"></select>
+        <div id="noBeanWarning" class="field-label hidden" style="color: var(--danger); font-size: 11px;">
+          No active beans in stock. Add or reactivate a bag in Pantry.
+        </div>
+      </div>
+
+      <!-- Dose Selector (Slider + Numeric Input) -->
+      <div class="field-group">
+        <label class="field-label">Dose Weight</label>
+        <div class="slider-row">
+          <input type="range" id="doseSlider" min="7" max="40" step="0.5" value="18">
+          <div class="dose-input-box">
+            <input type="number" id="doseNumber" min="7" max="40" step="0.5" value="18" class="mono">
+            <span>g</span>
+          </div>
+        </div>
+        <div class="chip-group" style="margin-top: 4px;">
+          <button class="chip" data-dose="15">15g</button>
+          <button class="chip active" data-dose="18">18g</button>
+          <button class="chip" data-dose="20">20g</button>
+          <button class="chip" data-dose="22">22g</button>
+        </div>
+      </div>
+
+      <!-- Calculated Real-Time Metrics -->
+      <div class="metrics-row mono">
+        <div class="metric-item">
+          <span class="metric-label">Cup Cost</span>
+          <span class="metric-val" id="previewCost">0.000 KD</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Net Saved</span>
+          <span class="metric-val saved" id="previewSaved">+0.000 KD</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="logBrewBtn">Log Cup</button>
+    </div>
+  </section>
+
+  <!-- 2. ROI BREAK-EVEN VIEW -->
+  <section id="view-roi" class="view-section hidden">
+    <!-- Setup Switcher -->
+    <div class="setup-segmented">
+      <button class="setup-seg-btn active" data-setup="v60">V60 Setup</button>
+      <button class="setup-seg-btn" data-setup="espresso">Espresso Setup</button>
+    </div>
+
+    <!-- Hero Card -->
+    <div class="card roi-hero">
+      <span class="roi-label" id="roiHeroStatusLabel">Remaining to Break Even</span>
+      <div class="roi-amount-row mono">
+        <span class="roi-main-val" id="roiHeroAmount">0.000</span>
+        <span class="roi-currency">KD</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="roiProgressBar"></div>
+      </div>
+      <div class="roi-stats-strip mono">
+        <span id="roiCupsBrewed">0 Cups</span>
+        <span id="roiTotalSaved">Saved: 0.000 KD</span>
+        <span id="roiAmortizedPct">0.0%</span>
+      </div>
+    </div>
+
+    <!-- Setup Financial Breakdown -->
+    <div class="card">
+      <div class="card-title">Setup Summary</div>
+      <div class="metrics-row mono">
+        <div class="metric-item">
+          <span class="metric-label">Equipment Total</span>
+          <span class="metric-val" id="roiGearTotal">0.000 KD</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Bean Spend</span>
+          <span class="metric-val" id="roiBeanSpend">0.000 KD</span>
+        </div>
+      </div>
+      <div class="metrics-row mono">
+        <div class="metric-item">
+          <span class="metric-label">Avg Cost / Cup</span>
+          <span class="metric-val" id="roiAvgCupCost">0.000 KD</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Avg Saved / Cup</span>
+          <span class="metric-val saved" id="roiAvgSaved">+0.000 KD</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. LOGS VIEW -->
+  <section id="view-logs" class="view-section hidden">
+    <div class="card-title" style="padding: 0 4px;">
+      <span>Recent Extractions</span>
+      <span class="mono" id="feedCount" style="color: var(--text-muted); font-size: 12px;">0 brews</span>
+    </div>
+    <div class="list-feed" id="brewList"></div>
+  </section>
+
+  <!-- 4. PANTRY & SETTINGS VIEW -->
+  <section id="view-pantry" class="view-section hidden">
+    <!-- Bean Bags In-Stock -->
+    <div class="card">
+      <div class="card-title">
+        <span>Active Beans</span>
+        <button class="btn-subtle" id="showAddBeanModalBtn" style="padding: 3px 8px; font-size: 11px;">+ New Bag</button>
+      </div>
+      <div class="list-feed" id="activeBeanList"></div>
+    </div>
+
+    <!-- Finished Bags Archive -->
+    <div class="card">
+      <div class="card-title">
+        <span>Finished Bags Archive</span>
+      </div>
+      <div class="list-feed" id="finishedBeanList"></div>
+    </div>
+
+    <!-- Equipment List -->
+    <div class="card">
+      <div class="card-title">
+        <span>Equipment</span>
+        <button class="btn-subtle" id="showAddGearModalBtn" style="padding: 3px 8px; font-size: 11px;">+ Add Gear</button>
+      </div>
+      <div class="list-feed" id="gearList"></div>
+    </div>
+
+    <!-- Benchmark Cafe Prices -->
+    <div class="card">
+      <div class="card-title">Cafe Benchmark Prices</div>
+      <div class="field-group">
+        <label class="field-label">V60 Benchmark (KD)</label>
+        <input type="number" step="0.050" class="mono" id="benchV60">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Milk Based Benchmark (KD)</label>
+        <input type="number" step="0.050" class="mono" id="benchMilk">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Espresso Benchmark (KD)</label>
+        <input type="number" step="0.050" class="mono" id="benchEspresso">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Moka Pot Benchmark (KD)</label>
+        <input type="number" step="0.050" class="mono" id="benchMoka">
+      </div>
+      <button class="btn-primary" id="saveBenchmarksBtn">Save Benchmarks</button>
+    </div>
+
+    <!-- System Actions -->
+    <div style="display: flex; justify-content: center; padding: 12px 0;">
+      <button class="btn-subtle" id="resetAppDataBtn" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">
+        Reset App Data to Defaults
       </button>
-    </header>
-
-    <!-- 4 TABS -->
-    <nav class="tab-bar">
-      <button type="button" id="tabNavBrew" class="tab-btn active" onclick="switchNavTab('brew')">☕ Brew</button>
-      <button type="button" id="tabNavRoi" class="tab-btn" onclick="switchNavTab('roi')">📈 ROI</button>
-      <button type="button" id="tabNavHistory" class="tab-btn" onclick="switchNavTab('history')">📜 Logs</button>
-      <button type="button" id="tabNavPantry" class="tab-btn" onclick="switchNavTab('pantry')">📦 Pantry</button>
-    </nav>
-
-    <!-- MAIN VIEWS -->
-    <main>
-
-      <!-- TAB 1: BREW LOGGER -->
-      <section id="viewBrew" class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span style="font-family:var(--mono); font-size:11px; text-transform:uppercase; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
-            <span style="width:7px; height:7px; border-radius:50%; background:var(--emerald);"></span>
-            <span>Quick Coffee Logger</span>
-          </span>
-          <button type="button" id="repeatLastBtn" onclick="duplicateLastBrew()" class="hidden btn-secondary" style="font-size:10px; padding:4px 8px;">
-            ↺ Repeat Last
-          </button>
-        </div>
-
-        <!-- Drink Selector -->
-        <div class="form-group">
-          <label for="drinkSelect" class="form-label">
-            <span>Drink Type</span>
-            <span id="drinkSetupBadge" class="badge">V60 Filter Setup</span>
-          </label>
-          <div class="select-wrap">
-            <select id="drinkSelect" onchange="handleDrinkChange()">
-              <option value="V60" data-setup="v60">☕ V60 Pour Over</option>
-              <option value="Ice V60" data-setup="v60">❄️ Ice V60</option>
-              <option value="Switch" data-setup="v60">🔀 Hario Switch</option>
-              <option value="Moka Pot" data-setup="v60">♨️ Moka Pot</option>
-              <option value="Espresso" data-setup="espresso">⚡ Espresso (Double)</option>
-              <option value="Flat White" data-setup="espresso">🥛 Flat White</option>
-              <option value="Latte" data-setup="espresso">☕🥛 Cafe Latte</option>
-              <option value="Cortado" data-setup="espresso">🥃 Cortado</option>
-            </select>
-            <div class="select-arrow">▼</div>
-          </div>
-        </div>
-
-        <!-- Bean Selector -->
-        <div class="form-group">
-          <div class="form-label">
-            <span>Active Coffee Beans</span>
-            <button type="button" onclick="switchNavTab('pantry')" style="background:none; border:none; color:var(--text-muted); text-decoration:underline; font-size:10px; font-family:var(--mono); cursor:pointer;">+ Manage</button>
-          </div>
-          <div class="select-wrap">
-            <select id="beanSelect" onchange="handleBeanChange()"></select>
-            <div class="select-arrow">▼</div>
-          </div>
-          <div id="noBeansAlert" class="hidden" style="color:var(--amber); font-size:10px; font-family:var(--mono); margin-top:4px;">
-            ⚠️ All bags finished! Tap Pantry to add or restore a bag.
-          </div>
-        </div>
-
-        <!-- Dose Controls -->
-        <div class="form-group">
-          <div class="form-label">
-            <span>Coffee Dose</span>
-            <div style="display:flex; align-items:center; gap:4px;">
-              <input type="number" id="doseNumberInput" step="0.5" min="6" max="50" value="18" oninput="handleDoseInput(this.value)" style="width:55px; padding:4px; text-align:center;">
-              <span class="mono" style="font-size:11px; color:var(--text-muted);">g</span>
-            </div>
-          </div>
-          <input type="range" id="doseSlider" min="8" max="32" step="0.5" value="18" oninput="handleDoseSlider(this.value)">
-
-          <div class="chip-grid">
-            <button type="button" class="chip-btn" onclick="setPresetDose(15)">15g</button>
-            <button type="button" class="chip-btn active" onclick="setPresetDose(18)">18g</button>
-            <button type="button" class="chip-btn" onclick="setPresetDose(20)">20g</button>
-            <button type="button" class="chip-btn" onclick="setPresetDose(22)">22g</button>
-          </div>
-        </div>
-
-        <!-- Live Financial Preview -->
-        <div class="financial-preview">
-          <div>
-            <div class="preview-col-label">Cup Cost</div>
-            <div id="liveCupCost" class="preview-col-val">0.000 KD</div>
-          </div>
-          <div style="text-align:right;">
-            <div class="preview-col-label">Net Saved vs Cafe</div>
-            <div id="liveCupSavings" class="preview-col-val emerald-text">+0.000 KD</div>
-          </div>
-        </div>
-
-        <!-- Log Cup Button -->
-        <button type="button" id="logCupBtn" class="btn-main" onclick="logCupNow()">
-          <span>+ Log Brewed Cup</span>
-          <span id="logCupSavingsTag" class="mono" style="font-size:11px; color:#065f46;">(+0.000 KD)</span>
-        </button>
-      </section>
-
-      <!-- TAB 2: ROI BREAK-EVEN -->
-      <section id="viewRoi" class="hidden">
-        <!-- Setup Switcher -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:4px; margin-top:12px;">
-          <button type="button" id="btnModeV60" onclick="switchSetupMode('v60')" class="tab-btn active">☕ V60 Filter</button>
-          <button type="button" id="btnModeEspresso" onclick="switchSetupMode('espresso')" class="tab-btn">⚡ Espresso</button>
-        </div>
-
-        <!-- Financial Amortization Card -->
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; text-transform:uppercase;">
-            <span id="heroSetupTag" class="badge">V60 SETUP</span>
-            <span id="heroPercentTag" style="font-weight:700;">0% Amortized</span>
-          </div>
-
-          <div style="margin:10px 0 4px 0; display:flex; align-items:baseline; gap:6px;">
-            <div id="heroBalanceNumber" class="mono-num" style="font-size:36px; font-weight:900;">0.000</div>
-            <div id="heroCurrencyLabel" class="mono" style="font-size:14px; color:var(--text-muted);">KD</div>
-          </div>
-
-          <div class="progress-track">
-            <div id="heroProgressBar" class="progress-fill"></div>
-          </div>
-
-          <div class="hero-stat-row">
-            <div>Cups: <span id="statCups" style="color:#fff; font-weight:700;">0</span></div>
-            <div>Saved: <span id="statSaved" class="emerald-text" style="font-weight:700;">+0.000 KD</span></div>
-            <div>Gear: <span id="statGear" style="color:#ddd; font-weight:700;">0.000 KD</span></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: LOGS & HISTORY -->
-      <section id="viewHistory" class="hidden" style="margin-top:12px;">
-        <div style="display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:8px;">
-          <span>BREW HISTORY</span>
-          <span id="historyCountBadge">0 entries</span>
-        </div>
-
-        <div id="feedList"></div>
-
-        <div id="feedEmptyNotice" class="card hidden" style="text-align:center; padding:30px 14px; border-style:dashed;">
-          <div class="mono" style="font-size:12px; color:var(--text-muted);">No coffee logged yet</div>
-          <div class="mono" style="font-size:10px; color:#555; margin-top:4px;">Use the Brew tab to log your first extraction.</div>
-        </div>
-      </section>
-
-      <!-- TAB 4: PANTRY & SETTINGS -->
-      <section id="viewPantry" class="hidden" style="margin-top:12px;">
-        
-        <!-- Coffee Beans Section -->
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div>
-              <div style="font-weight:700; font-size:12px;">Coffee Beans In-Stock</div>
-              <div class="mono" style="font-size:10px; color:var(--text-muted);">Tap "Bag Finished" when empty</div>
-            </div>
-            <button type="button" class="btn-secondary" onclick="toggleAddBeanForm()">+ Add</button>
-          </div>
-
-          <!-- Add Bean Inline Form -->
-          <form id="addBeanForm" class="hidden" onsubmit="submitNewBean(event)" style="background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:10px;">
-            <div class="form-group">
-              <label for="newBeanName" class="form-label">Roaster & Origin</label>
-              <input type="text" id="newBeanName" placeholder="e.g. Earth - Ethiopia" required>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="form-group">
-              <div>
-                <label for="newBeanWeight" class="form-label">Weight (g)</label>
-                <input type="number" id="newBeanWeight" placeholder="250" value="250" required>
-              </div>
-              <div>
-                <label for="newBeanPrice" class="form-label">Price (KD)</label>
-                <input type="number" id="newBeanPrice" step="0.050" placeholder="5.500" required>
-              </div>
-            </div>
-            <div style="display:flex; gap:6px;">
-              <button type="button" class="btn-secondary" onclick="toggleAddBeanForm()" style="flex:1;">Cancel</button>
-              <button type="submit" class="btn-main" style="flex:1; padding:8px; font-size:11px;">Save Bag</button>
-            </div>
-          </form>
-
-          <!-- Active Beans List -->
-          <div id="activeBeansList"></div>
-        </div>
-
-        <!-- Finished Bags Archive -->
-        <div class="card" style="padding:10px 14px;">
-          <details>
-            <summary style="font-family:var(--mono); font-size:11px; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span style="font-weight:700;">Archive: Finished Bags</span>
-                <span id="archiveCountTag" class="badge">0</span>
-              </div>
-              <span style="color:var(--text-muted);">▼</span>
-            </summary>
-            <div id="archivedBeansList" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-subtle);"></div>
-          </details>
-        </div>
-
-        <!-- Tools & Equipment -->
-        <div class="card" style="padding:10px 14px;">
-          <details>
-            <summary style="font-family:var(--mono); font-size:11px; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span style="font-weight:700;">Tools & Equipment</span>
-                <span id="gearCountTag" class="badge">6</span>
-              </div>
-              <span style="color:var(--text-muted);">▼</span>
-            </summary>
-            <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-subtle);">
-              <div style="text-align:right; margin-bottom:8px;">
-                <button type="button" class="btn-secondary" onclick="toggleAddGearForm()">+ Add Tool</button>
-              </div>
-
-              <!-- Add Gear Form -->
-              <form id="addGearForm" class="hidden" onsubmit="submitNewGear(event)" style="background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:10px;">
-                <div class="form-group">
-                  <label for="newGearName" class="form-label">Tool / Machine Name</label>
-                  <input type="text" id="newGearName" placeholder="e.g. Fellow Ode Grinder" required>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="form-group">
-                  <div>
-                    <label for="newGearPrice" class="form-label">Price (KD)</label>
-                    <input type="number" id="newGearPrice" step="0.250" placeholder="115.000" required>
-                  </div>
-                  <div>
-                    <label for="newGearSetup" class="form-label">Setup</label>
-                    <div class="select-wrap">
-                      <select id="newGearSetup">
-                        <option value="v60">V60</option>
-                        <option value="espresso">Espresso</option>
-                        <option value="shared">Shared 50/50</option>
-                      </select>
-                      <div class="select-arrow">▼</div>
-                    </div>
-                  </div>
-                </div>
-                <div style="display:flex; gap:6px;">
-                  <button type="button" class="btn-secondary" onclick="toggleAddGearForm()" style="flex:1;">Cancel</button>
-                  <button type="submit" class="btn-main" style="flex:1; padding:8px; font-size:11px;">Save Tool</button>
-                </div>
-              </form>
-
-              <div id="equipmentList"></div>
-            </div>
-          </details>
-        </div>
-
-        <!-- Baseline Prices -->
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="font-weight:700; font-size:12px;">Cafe Benchmark Prices</span>
-            <button type="button" class="btn-secondary" onclick="saveBenchmarkPrices()" style="background:#fff; color:#000; font-weight:700;">Save Prices</button>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <div>
-              <label for="bmV60" class="form-label">V60 / Pour</label>
-              <input type="number" step="0.050" id="bmV60">
-            </div>
-            <div>
-              <label for="bmEspresso" class="form-label">Espresso</label>
-              <input type="number" step="0.050" id="bmEspresso">
-            </div>
-            <div>
-              <label for="bmMilk" class="form-label">Flat White / Latte</label>
-              <input type="number" step="0.050" id="bmMilk">
-            </div>
-            <div>
-              <label for="bmCortado" class="form-label">Cortado</label>
-              <input type="number" step="0.050" id="bmCortado">
-            </div>
-          </div>
-        </div>
-
-        <!-- Emergency Factory Reset -->
-        <div style="margin-top:16px;">
-          <button type="button" onclick="promptFactoryReset()" style="width:100%; background:var(--red-dark); border:1px solid #7f1d1d; color:#fca5a5; padding:10px; border-radius:10px; font-family:var(--mono); font-size:11px; cursor:pointer;">
-            ⚠️ Reset All Data to Clean Defaults
-          </button>
-        </div>
-
-      </section>
-
-    </main>
-
-    <!-- EXPORT MODAL -->
-    <div id="exportModal" class="modal-overlay">
-      <div class="modal-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span style="font-weight:700; font-size:12px;">Export Coffee Logs</span>
-          <button type="button" onclick="closeExportModal()" style="background:none; border:none; color:#aaa; font-size:16px; cursor:pointer;">✕</button>
-        </div>
-
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin-bottom:10px;">
-          <button type="button" id="expFilterAll" class="chip-btn active" onclick="setExportFilter('all')">All Time</button>
-          <button type="button" id="expFilterMonth" class="chip-btn" onclick="setExportFilter('month')">30 Days</button>
-          <button type="button" id="expFilterCustom" class="chip-btn" onclick="setExportFilter('custom')">Custom</button>
-        </div>
-
-        <div id="exportDateRange" class="hidden" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px;">
-          <div>
-            <label for="expStartDate" class="form-label">From</label>
-            <input type="date" id="expStartDate" onchange="generateExportSummary()">
-          </div>
-          <div>
-            <label for="expEndDate" class="form-label">To</label>
-            <input type="date" id="expEndDate" onchange="generateExportSummary()">
-          </div>
-        </div>
-
-        <textarea id="exportTextOutput" rows="7" readonly style="margin-bottom:10px; font-size:10px; resize:none;"></textarea>
-
-        <button type="button" class="btn-main" onclick="copyExportToClipboard()">
-          📋 Copy to Clipboard
-        </button>
-      </div>
     </div>
+  </section>
 
-    <!-- MINIMAL CONFIRM DIALOG -->
-    <div id="confirmModal" class="modal-overlay">
-      <div class="modal-card" style="text-align:center;">
-        <h3 id="confirmTitle" style="font-size:13px; font-weight:800; margin-bottom:6px;">Are you sure?</h3>
-        <p id="confirmMessage" style="font-size:11px; color:var(--text-muted); margin-bottom:14px;"></p>
-        <div style="display:flex; gap:8px;">
-          <button type="button" id="confirmCancelBtn" class="btn-secondary" style="flex:1;">Cancel</button>
-          <button type="button" id="confirmOkBtn" class="btn-main" style="flex:1; padding:8px;">Confirm</button>
-        </div>
-      </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div id="exportModal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="card-title">
+      <span>Export Brewing Log</span>
+      <button class="btn-subtle" id="closeExportBtn" style="padding: 2px 6px;">Close</button>
     </div>
-
-    <!-- TOAST NOTIFICATIONS -->
-    <div id="toastContainer"></div>
-
+    <div class="chip-group">
+      <button class="chip active" id="exportRangeAll">All Time</button>
+      <button class="chip" id="exportRange30">Last 30 Days</button>
+    </div>
+    <textarea class="export-text mono" id="exportContent" readonly></textarea>
+    <button class="btn-primary" id="copyClipboardBtn">Copy to Clipboard</button>
   </div>
+</div>
 
-  <script>
-    const STORAGE_KEY = "brewlog_roi_data_v4";
+<!-- ADD BEAN MODAL -->
+<div id="addBeanModal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="card-title">
+      <span>Add Coffee Bag</span>
+      <button class="btn-subtle" id="closeAddBeanBtn" style="padding: 2px 6px;">Close</button>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Roaster & Origin</label>
+      <input type="text" id="newBeanName" placeholder="e.g. Wafer - Ash Roastery">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Bag Weight (grams)</label>
+      <input type="number" id="newBeanWeight" value="250" class="mono">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Price Paid (KD)</label>
+      <input type="number" id="newBeanPrice" step="0.250" value="5.500" class="mono">
+    </div>
+    <button class="btn-primary" id="saveNewBeanBtn">Save Bag</button>
+  </div>
+</div>
 
-    // Resilient local storage with memory fallback for strict Android WebViews
-    const StorageHandler = {
-      mem: {},
-      get(k) {
-        try {
-          if (window.localStorage) {
-            const val = window.localStorage.getItem(k);
-            if (val) return val;
-          }
-        } catch (e) {
-          console.warn("Storage read error, using RAM", e);
-        }
-        return this.mem[k] || null;
-      },
-      set(k, v) {
-        this.mem[k] = v;
-        try {
-          if (window.localStorage) {
-            window.localStorage.setItem(k, v);
-          }
-        } catch (e) {
-          console.warn("Storage write error, using RAM", e);
-        }
-      }
-    };
+<!-- ADD GEAR MODAL -->
+<div id="addGearModal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="card-title">
+      <span>Add Equipment</span>
+      <button class="btn-subtle" id="closeAddGearBtn" style="padding: 2px 6px;">Close</button>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Item Name</label>
+      <input type="text" id="newGearName" placeholder="e.g. Fellow Ode Grinder">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Price Paid (KD)</label>
+      <input type="number" id="newGearPrice" step="1.000" placeholder="0.000" class="mono">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Category</label>
+      <select id="newGearSetup">
+        <option value="v60">V60 Setup</option>
+        <option value="espresso">Espresso Setup</option>
+        <option value="shared">Shared (50% split)</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="saveNewGearBtn">Save Equipment</button>
+  </div>
+</div>
 
-    const DEFAULT_DATA = {
-      activeTab: "brew",
-      activeMode: "v60",
-      currency: "KD",
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Strict 4 Drink Types & System Metadata
+  const DRINK_CONFIG = {
+    v60: { label: "V60", defaultBenchmark: 2.000, setup: "v60" },
+    milk: { label: "Milk based drink", defaultBenchmark: 1.750, setup: "espresso" },
+    espresso: { label: "Espresso", defaultBenchmark: 1.250, setup: "espresso" },
+    moka: { label: "Moka Pot", defaultBenchmark: 1.250, setup: "v60" }
+  };
+
+  const STORAGE_KEY = "brewlog_minimal_db";
+
+  // Safe Local Storage Wrapper
+  const Storage = {
+    get: function() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return null;
+    },
+    set: function(data) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }
+  };
+
+  // Default Seed Data
+  function getDefaultData() {
+    return {
+      activeSetup: "v60",
       benchmarks: {
-        "V60": 2.000,
-        "Ice V60": 2.250,
-        "Switch": 2.000,
-        "Moka Pot": 1.250,
-        "Espresso": 1.250,
-        "Cortado": 1.500,
-        "Flat White": 1.750,
-        "Latte": 1.750
+        v60: 2.000,
+        milk: 1.750,
+        espresso: 1.250,
+        moka: 1.250
       },
-      equipment: [
-        { id: "eq-1", name: "Fellow Ode Gen 2 Grinder", price: 115.000, setup: "v60" },
-        { id: "eq-2", name: "Hario V60 Switch + Glass Server", price: 18.500, setup: "v60" },
-        { id: "eq-3", name: "Timemore Black Mirror Scale", price: 16.000, setup: "shared" },
-        { id: "eq-4", name: "Breville Bambino Plus Espresso", price: 155.000, setup: "espresso" },
-        { id: "eq-5", name: "DF64 Gen 2 Grinder", price: 125.000, setup: "espresso" },
-        { id: "eq-6", name: "Normcore 54mm Portafilter & Tamper", price: 24.000, setup: "espresso" }
-      ],
       beans: [
-        {
-          id: "bean-1",
-          name: "Earth Roastery - Ethiopia Yirgacheffe",
-          bagWeight: 250,
-          bagPrice: 5.500,
-          remainingGrams: 232,
-          finished: false
-        },
-        {
-          id: "bean-2",
-          name: "Volcan Roasters - Colombia Pink Bourbon",
-          bagWeight: 250,
-          bagPrice: 7.250,
-          remainingGrams: 250,
-          finished: false
-        }
+        { id: "b1", name: "Wafer - Ash Roastery", weight: 250, price: 5.500, remainingGrams: 232, isFinished: false },
+        { id: "b2", name: "Pineapple - Rawis", weight: 250, price: 6.250, remainingGrams: 250, isFinished: false }
       ],
-      brews: [
-        {
-          id: "brew-1",
-          setup: "v60",
-          drink: "V60",
-          beanId: "bean-1",
-          beanName: "Earth Roastery - Ethiopia Yirgacheffe",
-          dose: 18,
-          costPerG: 0.022,
-          cupCost: 0.396,
-          benchmark: 2.000,
-          savings: 1.604,
-          timestamp: Date.now() - 7200000
-        }
+      gear: [
+        { id: "g1", name: "Fellow Ode Gen 1", price: 95.000, setup: "v60" },
+        { id: "g2", name: "Hario V60 Plastic 02", price: 4.500, setup: "v60" },
+        { id: "g3", name: "Timemore Sculptor 064s", price: 175.000, setup: "espresso" },
+        { id: "g4", name: "Flair 58 Plus", price: 185.000, setup: "espresso" }
       ],
-      currentDose: 18,
-      exportFilter: "all"
+      brews: [],
+      trash: []
+    };
+  }
+
+  let db = Storage.get() || getDefaultData();
+
+  // Validate State Model
+  if (!db.benchmarks) db.benchmarks = { v60: 2.000, milk: 1.750, espresso: 1.250, moka: 1.250 };
+  if (!db.activeSetup) db.activeSetup = "v60";
+  if (!Array.isArray(db.beans)) db.beans = [];
+  if (!Array.isArray(db.gear)) db.gear = [];
+  if (!Array.isArray(db.brews)) db.brews = [];
+  if (!Array.isArray(db.trash)) db.trash = [];
+
+  function saveState() {
+    Storage.set(db);
+  }
+
+  // Currency Formatter (Fixed 3 Decimal Places)
+  function formatKD(amount) {
+    const num = Number(amount) || 0;
+    return num.toFixed(3) + " KD";
+  }
+
+  // UI Element Selectors
+  const tabs = document.querySelectorAll(".tab-btn");
+  const views = {
+    "view-brew": document.getElementById("view-brew"),
+    "view-roi": document.getElementById("view-roi"),
+    "view-logs": document.getElementById("view-logs"),
+    "view-pantry": document.getElementById("view-pantry")
+  };
+
+  const brewDrinkSelect = document.getElementById("brewDrinkSelect");
+  const brewBeanSelect = document.getElementById("brewBeanSelect");
+  const noBeanWarning = document.getElementById("noBeanWarning");
+  const doseSlider = document.getElementById("doseSlider");
+  const doseNumber = document.getElementById("doseNumber");
+  const previewCost = document.getElementById("previewCost");
+  const previewSaved = document.getElementById("previewSaved");
+  const logBrewBtn = document.getElementById("logBrewBtn");
+  const repeatLastBtn = document.getElementById("repeatLastBtn");
+
+  const setupSegBtns = document.querySelectorAll(".setup-seg-btn");
+  const roiHeroStatusLabel = document.getElementById("roiHeroStatusLabel");
+  const roiHeroAmount = document.getElementById("roiHeroAmount");
+  const roiProgressBar = document.getElementById("roiProgressBar");
+  const roiCupsBrewed = document.getElementById("roiCupsBrewed");
+  const roiTotalSaved = document.getElementById("roiTotalSaved");
+  const roiAmortizedPct = document.getElementById("roiAmortizedPct");
+  const roiGearTotal = document.getElementById("roiGearTotal");
+  const roiBeanSpend = document.getElementById("roiBeanSpend");
+  const roiAvgCupCost = document.getElementById("roiAvgCupCost");
+  const roiAvgSaved = document.getElementById("roiAvgSaved");
+
+  const brewList = document.getElementById("brewList");
+  const feedCount = document.getElementById("feedCount");
+  const activeBeanList = document.getElementById("activeBeanList");
+  const finishedBeanList = document.getElementById("finishedBeanList");
+  const gearList = document.getElementById("gearList");
+
+  const benchV60 = document.getElementById("benchV60");
+  const benchMilk = document.getElementById("benchMilk");
+  const benchEspresso = document.getElementById("benchEspresso");
+  const benchMoka = document.getElementById("benchMoka");
+  const saveBenchmarksBtn = document.getElementById("saveBenchmarksBtn");
+
+  // Navigation Logic
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      btn.classList.add("active");
+      const targetView = btn.getAttribute("data-tab");
+      Object.keys(views).forEach(vKey => {
+        if (vKey === targetView) {
+          views[vKey].classList.remove("hidden");
+        } else {
+          views[vKey].classList.add("hidden");
+        }
+      });
+      renderAll();
+    });
+  });
+
+  // Setup Switcher (V60 vs Espresso)
+  setupSegBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      setupSegBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      db.activeSetup = btn.getAttribute("data-setup");
+      saveState();
+      renderROI();
+    });
+  });
+
+  // Dose Synchronization
+  doseSlider.addEventListener("input", (e) => {
+    doseNumber.value = parseFloat(e.target.value).toFixed(1);
+    updateBrewCalculations();
+  });
+  doseNumber.addEventListener("input", (e) => {
+    const val = parseFloat(e.target.value);
+    if (!isNaN(val) && val >= 5 && val <= 60) {
+      doseSlider.value = val;
+    }
+    updateBrewCalculations();
+  });
+
+  // Quick Dose Chips
+  document.querySelectorAll(".chip[data-dose]").forEach(chip => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll(".chip[data-dose]").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      const d = chip.getAttribute("data-dose");
+      doseSlider.value = d;
+      doseNumber.value = d;
+      updateBrewCalculations();
+    });
+  });
+
+  brewDrinkSelect.addEventListener("change", updateBrewCalculations);
+  brewBeanSelect.addEventListener("change", updateBrewCalculations);
+
+  // Calculate Real-Time Brew Cost & Savings
+  function updateBrewCalculations() {
+    const beanId = brewBeanSelect.value;
+    const bean = db.beans.find(b => b.id === beanId);
+    const dose = parseFloat(doseNumber.value) || 0;
+    const drinkKey = brewDrinkSelect.value;
+
+    if (!bean || bean.weight <= 0) {
+      previewCost.textContent = "0.000 KD";
+      previewSaved.textContent = "+0.000 KD";
+      return;
+    }
+
+    const costPerGram = bean.price / bean.weight;
+    const cupCost = dose * costPerGram;
+    const benchmark = db.benchmarks[drinkKey] || 1.500;
+    const netSaved = benchmark - cupCost;
+
+    previewCost.textContent = formatKD(cupCost);
+    previewSaved.textContent = (netSaved >= 0 ? "+" : "") + formatKD(netSaved);
+  }
+
+  // Populate Active Beans in Logger Dropdown
+  function populateBeanSelect() {
+    const activeBeans = db.beans.filter(b => !b.isFinished);
+    brewBeanSelect.innerHTML = "";
+
+    if (activeBeans.length === 0) {
+      brewBeanSelect.classList.add("hidden");
+      noBeanWarning.classList.remove("hidden");
+      logBrewBtn.disabled = true;
+      logBrewBtn.style.opacity = "0.5";
+      previewCost.textContent = "0.000 KD";
+      previewSaved.textContent = "+0.000 KD";
+      return;
+    }
+
+    brewBeanSelect.classList.remove("hidden");
+    noBeanWarning.classList.add("hidden");
+    logBrewBtn.disabled = false;
+    logBrewBtn.style.opacity = "1";
+
+    activeBeans.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.id;
+      opt.textContent = `${b.name} (${b.remainingGrams}g left)`;
+      brewBeanSelect.appendChild(opt);
+    });
+
+    updateBrewCalculations();
+  }
+
+  // Log Brew Action
+  logBrewBtn.addEventListener("click", () => {
+    const beanId = brewBeanSelect.value;
+    const bean = db.beans.find(b => b.id === beanId);
+    if (!bean) return;
+
+    const dose = parseFloat(doseNumber.value) || 0;
+    const drinkKey = brewDrinkSelect.value;
+    const costPerGram = bean.price / bean.weight;
+    const cupCost = dose * costPerGram;
+    const benchmark = db.benchmarks[drinkKey] || 1.500;
+    const netSaved = benchmark - cupCost;
+    const setupType = DRINK_CONFIG[drinkKey].setup;
+
+    // Deduct grams
+    bean.remainingGrams = Math.max(0, bean.remainingGrams - dose);
+
+    const newBrew = {
+      id: "brew_" + Date.now(),
+      drinkKey: drinkKey,
+      drinkLabel: DRINK_CONFIG[drinkKey].label,
+      beanId: bean.id,
+      beanName: bean.name,
+      dose: dose,
+      cupCost: cupCost,
+      netSaved: netSaved,
+      setup: setupType,
+      timestamp: Date.now()
     };
 
-    let APP = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    db.brews.unshift(newBrew);
+    saveState();
+    renderAll();
+    showToast(`Logged ${newBrew.drinkLabel} (+${formatKD(netSaved)})`);
+  });
 
-    function loadAppState() {
-      try {
-        const raw = StorageHandler.get(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          APP = Object.assign({}, DEFAULT_DATA, parsed);
-          if (!Array.isArray(APP.beans) || APP.beans.length === 0) {
-            APP.beans = JSON.parse(JSON.stringify(DEFAULT_DATA.beans));
-          }
-          if (!Array.isArray(APP.equipment)) {
-            APP.equipment = JSON.parse(JSON.stringify(DEFAULT_DATA.equipment));
-          }
-          if (!Array.isArray(APP.brews)) {
-            APP.brews = [];
-          }
-        }
-      } catch (err) {
-        console.error("State load failed, falling back to defaults", err);
-        APP = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  // Repeat Last Brew Action
+  repeatLastBtn.addEventListener("click", () => {
+    if (db.brews.length === 0) {
+      showToast("No brews to repeat");
+      return;
+    }
+    const lastBrew = db.brews[0];
+    const bean = db.beans.find(b => b.id === lastBrew.beanId && !b.isFinished) || db.beans.find(b => !b.isFinished);
+    if (!bean) {
+      showToast("No active beans available");
+      return;
+    }
+
+    const dose = lastBrew.dose;
+    const costPerGram = bean.price / bean.weight;
+    const cupCost = dose * costPerGram;
+    const benchmark = db.benchmarks[lastBrew.drinkKey] || 1.500;
+    const netSaved = benchmark - cupCost;
+
+    bean.remainingGrams = Math.max(0, bean.remainingGrams - dose);
+
+    const repeatedBrew = {
+      id: "brew_" + Date.now(),
+      drinkKey: lastBrew.drinkKey,
+      drinkLabel: lastBrew.drinkLabel,
+      beanId: bean.id,
+      beanName: bean.name,
+      dose: dose,
+      cupCost: cupCost,
+      netSaved: netSaved,
+      setup: lastBrew.setup,
+      timestamp: Date.now()
+    };
+
+    db.brews.unshift(repeatedBrew);
+    saveState();
+    renderAll();
+    showToast(`Repeated ${repeatedBrew.drinkLabel}`);
+  });
+
+  // Render ROI Analytics Dashboard
+  function renderROI() {
+    const curSetup = db.activeSetup;
+
+    // Gear total calculation for active setup
+    let gearTotal = 0;
+    db.gear.forEach(g => {
+      if (g.setup === curSetup) {
+        gearTotal += Number(g.price);
+      } else if (g.setup === "shared") {
+        gearTotal += Number(g.price) / 2;
       }
+    });
+
+    // Filter brews for this setup
+    const relevantBrews = db.brews.filter(b => b.setup === curSetup);
+    const totalCups = relevantBrews.length;
+    const totalSaved = relevantBrews.reduce((acc, b) => acc + (b.netSaved || 0), 0);
+    const totalCupCost = relevantBrews.reduce((acc, b) => acc + (b.cupCost || 0), 0);
+
+    const remaining = gearTotal - totalSaved;
+    const pct = gearTotal > 0 ? Math.min(100, Math.max(0, (totalSaved / gearTotal) * 100)) : 0;
+
+    if (remaining <= 0 && gearTotal > 0) {
+      roiHeroStatusLabel.textContent = "Net Profit Achieved";
+      roiHeroStatusLabel.style.color = "var(--accent)";
+      roiHeroAmount.textContent = "+" + Math.abs(remaining).toFixed(3);
+      roiHeroAmount.style.color = "var(--accent)";
+      roiProgressBar.classList.add("done");
+      roiProgressBar.style.width = "100%";
+    } else {
+      roiHeroStatusLabel.textContent = "Remaining to Break Even";
+      roiHeroStatusLabel.style.color = "var(--text-muted)";
+      roiHeroAmount.textContent = Math.max(0, remaining).toFixed(3);
+      roiHeroAmount.style.color = "var(--text)";
+      roiProgressBar.classList.remove("done");
+      roiProgressBar.style.width = pct.toFixed(1) + "%";
     }
 
-    function saveAppState() {
-      try {
-        StorageHandler.set(STORAGE_KEY, JSON.stringify(APP));
-      } catch (err) {
-        console.error("State save failed", err);
-      }
+    roiCupsBrewed.textContent = `${totalCups} Cups`;
+    roiTotalSaved.textContent = `Saved: ${totalSaved.toFixed(3)} KD`;
+    roiAmortizedPct.textContent = `${pct.toFixed(1)}%`;
+
+    roiGearTotal.textContent = formatKD(gearTotal);
+    roiBeanSpend.textContent = formatKD(totalCupCost);
+
+    const avgCost = totalCups > 0 ? (totalCupCost / totalCups) : 0;
+    const avgSaved = totalCups > 0 ? (totalSaved / totalCups) : 0;
+
+    roiAvgCupCost.textContent = formatKD(avgCost);
+    roiAvgSaved.textContent = (avgSaved >= 0 ? "+" : "") + formatKD(avgSaved);
+  }
+
+  // Render Recent Brews List
+  function renderLogs() {
+    brewList.innerHTML = "";
+    feedCount.textContent = `${db.brews.length} brews`;
+
+    if (db.brews.length === 0) {
+      brewList.innerHTML = '<div class="empty-state">No brews logged yet.</div>';
+      return;
     }
 
-    function fmt(val, decimals = 3) {
-      const n = Number(val);
-      return isNaN(n) ? "0.000" : n.toFixed(decimals);
-    }
+    db.brews.forEach(brew => {
+      const card = document.createElement("div");
+      card.className = "feed-card";
 
-    function fmtCurrency(val) {
-      return fmt(val, 3) + " " + (APP.currency || "KD");
-    }
-
-    function triggerHaptic(duration = 15) {
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        try { navigator.vibrate(duration); } catch (e) {}
-      }
-    }
-
-    function switchNavTab(tab) {
-      triggerHaptic(12);
-      APP.activeTab = tab;
-
-      const tabs = ['brew', 'roi', 'history', 'pantry'];
-      tabs.forEach(t => {
-        const btn = document.getElementById('tabNav' + t.charAt(0).toUpperCase() + t.slice(1));
-        const view = document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (btn && view) {
-          if (t === tab) {
-            btn.classList.add('active');
-            view.classList.remove('hidden');
-          } else {
-            btn.classList.remove('active');
-            view.classList.add('hidden');
-          }
-        }
+      const dateStr = new Date(brew.timestamp).toLocaleDateString([], {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
       });
 
-      if (tab === 'brew') renderBrewLogger();
-      if (tab === 'roi') renderRoiDashboard();
-      if (tab === 'history') renderHistoryFeed();
-      if (tab === 'pantry') renderPantryView();
-    }
+      card.innerHTML = `
+        <div class="feed-left">
+          <div class="feed-primary">${brew.drinkLabel} &middot; <span style="font-weight: 400; color: #a3a3a3;">${brew.beanName}</span></div>
+          <div class="feed-sub mono">${dateStr} &middot; ${brew.dose}g &middot; Cost: ${formatKD(brew.cupCost)}</div>
+        </div>
+        <div class="feed-right">
+          <span class="feed-saving mono">+${formatKD(brew.netSaved)}</span>
+          <button class="icon-action-btn" data-repeat="${brew.id}">Repeat</button>
+          <button class="icon-action-btn del" data-del="${brew.id}">Del</button>
+        </div>
+      `;
+      brewList.appendChild(card);
+    });
 
-    function renderBrewLogger() {
-      const beanSelect = document.getElementById('beanSelect');
-      const noBeansAlert = document.getElementById('noBeansAlert');
-      const activeBeans = (APP.beans || []).filter(b => !b.finished);
+    // Delete brew handler with undo
+    brewList.querySelectorAll("[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-del");
+        deleteBrew(id);
+      });
+    });
 
-      if (activeBeans.length === 0) {
-        beanSelect.innerHTML = `<option value="">(No active bags available)</option>`;
-        noBeansAlert.classList.remove('hidden');
-      } else {
-        noBeansAlert.classList.add('hidden');
-        const curr = beanSelect.value;
-        beanSelect.innerHTML = activeBeans.map(b => {
-          const cpg = b.bagWeight > 0 ? (b.bagPrice / b.bagWeight) : 0;
-          return `<option value="${b.id}">${b.name} (${b.remainingGrams}g left • ${fmt(cpg, 3)} KD/g)</option>`;
-        }).join('');
-
-        if (curr && activeBeans.some(b => b.id === curr)) {
-          beanSelect.value = curr;
-        } else {
-          beanSelect.value = activeBeans[0].id;
-        }
-      }
-
-      updateCalculationPreview();
-    }
-
-    function handleDrinkChange() {
-      triggerHaptic(10);
-      const drinkSelect = document.getElementById('drinkSelect');
-      const opt = drinkSelect.options[drinkSelect.selectedIndex];
-      const setup = opt ? opt.getAttribute('data-setup') : 'v60';
-      document.getElementById('drinkSetupBadge').textContent = (setup === 'espresso' ? "Espresso Bar Setup" : "V60 Filter Setup");
-      updateCalculationPreview();
-    }
-
-    function handleBeanChange() {
-      triggerHaptic(10);
-      updateCalculationPreview();
-    }
-
-    function handleDoseSlider(val) {
-      APP.currentDose = parseFloat(val);
-      document.getElementById('doseNumberInput').value = val;
-      updatePresetChips(val);
-      updateCalculationPreview();
-    }
-
-    function handleDoseInput(val) {
-      const n = parseFloat(val);
-      if (!isNaN(n) && n > 0) {
-        APP.currentDose = n;
-        const slider = document.getElementById('doseSlider');
-        if (slider && n >= parseFloat(slider.min) && n <= parseFloat(slider.max)) {
-          slider.value = n;
-        }
-        updatePresetChips(n);
-        updateCalculationPreview();
-      }
-    }
-
-    function setPresetDose(grams) {
-      triggerHaptic(12);
-      APP.currentDose = grams;
-      document.getElementById('doseSlider').value = grams;
-      document.getElementById('doseNumberInput').value = grams;
-      updatePresetChips(grams);
-      updateCalculationPreview();
-    }
-
-    function updatePresetChips(grams) {
-      document.querySelectorAll('.chip-grid .chip-btn').forEach(btn => {
-        if (parseFloat(btn.textContent) === parseFloat(grams)) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
+    // Repeat specific brew
+    brewList.querySelectorAll("[data-repeat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-repeat");
+        const b = db.brews.find(x => x.id === id);
+        if (b) {
+          brewDrinkSelect.value = b.drinkKey;
+          doseSlider.value = b.dose;
+          doseNumber.value = b.dose;
+          if (b.beanId && db.beans.find(x => x.id === b.beanId && !x.isFinished)) {
+            brewBeanSelect.value = b.beanId;
+          }
+          tabs[0].click();
+          updateBrewCalculations();
+          showToast(`Loaded ${b.drinkLabel} into logger`);
         }
       });
+    });
+  }
+
+  // Delete Brew & Refund Grams
+  function deleteBrew(brewId) {
+    const idx = db.brews.findIndex(b => b.id === brewId);
+    if (idx === -1) return;
+
+    const brew = db.brews[idx];
+    db.brews.splice(idx, 1);
+
+    // Refund bean grams
+    const bean = db.beans.find(b => b.id === brew.beanId);
+    if (bean) {
+      bean.remainingGrams = Math.min(bean.weight, bean.remainingGrams + brew.dose);
     }
 
-    function updateCalculationPreview() {
-      const beanSelect = document.getElementById('beanSelect');
-      const bean = (APP.beans || []).find(b => b.id === beanSelect.value);
-      const drinkSelect = document.getElementById('drinkSelect');
-      const drink = drinkSelect.value;
-      const dose = APP.currentDose || 18;
-      const benchmark = (APP.benchmarks && APP.benchmarks[drink]) ? APP.benchmarks[drink] : 2.000;
+    db.trash.push({ brew: brew, deletedAt: Date.now() });
+    saveState();
+    renderAll();
 
-      let cupCost = 0;
-      if (bean && bean.bagWeight > 0) {
-        const cpg = Number(bean.bagPrice) / Number(bean.bagWeight);
-        cupCost = dose * cpg;
+    showToast(`Brew deleted & ${brew.dose}g refunded`, () => {
+      // Undo callback
+      const trashIdx = db.trash.findIndex(t => t.brew.id === brew.id);
+      if (trashIdx !== -1) {
+        const item = db.trash.splice(trashIdx, 1)[0];
+        db.brews.splice(idx, 0, item.brew);
+        if (bean) {
+          bean.remainingGrams = Math.max(0, bean.remainingGrams - item.brew.dose);
+        }
+        saveState();
+        renderAll();
+        showToast("Restored brew");
       }
-      const savings = benchmark - cupCost;
+    });
+  }
 
-      document.getElementById('liveCupCost').textContent = fmtCurrency(cupCost);
-      document.getElementById('liveCupSavings').textContent = (savings >= 0 ? "+" : "") + fmtCurrency(savings);
-      document.getElementById('logCupSavingsTag').textContent = `(+${fmtCurrency(savings)})`;
-    }
-
-    function logCupNow() {
-      triggerHaptic(20);
-      const activeBeans = (APP.beans || []).filter(b => !b.finished);
-
-      if (activeBeans.length === 0) {
-        openConfirmDialog("All Bags Finished", "Would you like to reactivate your previous bean bags now?", () => {
-          (APP.beans || []).forEach(b => b.finished = false);
-          saveAppState();
-          renderBrewLogger();
-          renderPantryView();
-          displayToast("Beans reactivated!");
-        });
-        return;
-      }
-
-      const beanSelect = document.getElementById('beanSelect');
-      let bean = activeBeans.find(b => b.id === beanSelect.value);
-      if (!bean) bean = activeBeans[0];
-
-      const drinkSelect = document.getElementById('drinkSelect');
-      const opt = drinkSelect.options[drinkSelect.selectedIndex];
-      const drink = drinkSelect.value;
-      const setup = opt ? opt.getAttribute('data-setup') : 'v60';
-      const dose = APP.currentDose || 18;
-      const benchmark = (APP.benchmarks && APP.benchmarks[drink]) ? APP.benchmarks[drink] : 2.000;
-      const cpg = bean.bagWeight > 0 ? (Number(bean.bagPrice) / Number(bean.bagWeight)) : 0;
-      const cupCost = dose * cpg;
-      const savings = benchmark - cupCost;
-
-      // Deduct inventory
-      bean.remainingGrams = Math.max(0, Number(bean.remainingGrams || 0) - dose);
-
-      const brewEntry = {
-        id: "brew-" + Date.now(),
-        setup,
-        drink,
-        beanId: bean.id,
-        beanName: bean.name,
-        dose,
-        costPerG: cpg,
-        cupCost,
-        benchmark,
-        savings,
-        timestamp: Date.now()
-      };
-
-      if (!Array.isArray(APP.brews)) APP.brews = [];
-      APP.brews.unshift(brewEntry);
-      saveAppState();
-
-      renderBrewLogger();
-      renderRoiDashboard();
-      renderHistoryFeed();
-      renderPantryView();
-      displayToast(`Logged ${drink} (${dose}g) • Saved +${fmtCurrency(savings)}`);
-    }
-
-    function switchSetupMode(mode) {
-      triggerHaptic(12);
-      APP.activeMode = mode;
-      document.getElementById('btnModeV60').className = (mode === 'v60' ? "tab-btn active" : "tab-btn");
-      document.getElementById('btnModeEspresso').className = (mode === 'espresso' ? "tab-btn active" : "tab-btn");
-      saveAppState();
-      renderRoiDashboard();
-    }
-
-    function calculateRoiData() {
-      const mode = APP.activeMode || 'v60';
-      const gearCost = (APP.equipment || []).reduce((sum, item) => {
-        if (item.setup === mode) return sum + Number(item.price || 0);
-        if (item.setup === 'shared') return sum + (Number(item.price || 0) * 0.5);
-        return sum;
-      }, 0);
-
-      const relevantBrews = (APP.brews || []).filter(b => (b.setup ? b.setup === mode : true));
-      let totalSaved = 0;
-      relevantBrews.forEach(b => totalSaved += Number(b.savings || 0));
-
-      const isProfitable = totalSaved >= gearCost && gearCost > 0;
-      const remaining = Math.max(0, gearCost - totalSaved);
-      const netProfit = Math.max(0, totalSaved - gearCost);
-      const progress = gearCost > 0 ? Math.min(100, (totalSaved / gearCost) * 100) : (totalSaved > 0 ? 100 : 0);
-
-      return { gearCost, totalSaved, totalCups: relevantBrews.length, isProfitable, remaining, netProfit, progress };
-    }
-
-    function renderRoiDashboard() {
-      const data = calculateRoiData();
-      const setupTag = document.getElementById('heroSetupTag');
-      const balanceNum = document.getElementById('heroBalanceNumber');
-      const progressBar = document.getElementById('heroProgressBar');
-
-      setupTag.textContent = (APP.activeMode === 'v60' ? "V60 FILTER SETUP" : "ESPRESSO SETUP");
-      document.getElementById('statCups').textContent = data.totalCups;
-      document.getElementById('statSaved').textContent = "+" + fmtCurrency(data.totalSaved);
-      document.getElementById('statGear').textContent = fmtCurrency(data.gearCost);
-      document.getElementById('heroPercentTag').textContent = `${Math.round(data.progress)}% Amortized`;
-      progressBar.style.width = `${data.progress}%`;
-
-      if (data.isProfitable) {
-        setupTag.style.background = "var(--emerald-dark)";
-        setupTag.style.color = "var(--emerald)";
-        balanceNum.textContent = "+" + fmt(data.netProfit);
-        balanceNum.style.color = "var(--emerald)";
-        progressBar.style.background = "var(--emerald)";
-      } else {
-        setupTag.style.background = "var(--elevated)";
-        setupTag.style.color = "#ccc";
-        balanceNum.textContent = fmt(data.remaining);
-        balanceNum.style.color = "#ffffff";
-        progressBar.style.background = "#ffffff";
-      }
-    }
-
-    function renderHistoryFeed() {
-      const feedList = document.getElementById('feedList');
-      const emptyNotice = document.getElementById('feedEmptyNotice');
-      const countBadge = document.getElementById('historyCountBadge');
-      const repeatLastBtn = document.getElementById('repeatLastBtn');
-      const brews = APP.brews || [];
-
-      countBadge.textContent = `${brews.length} brews`;
-
-      if (brews.length > 0) {
-        repeatLastBtn.classList.remove('hidden');
-        emptyNotice.classList.add('hidden');
-      } else {
-        repeatLastBtn.classList.add('hidden');
-        emptyNotice.classList.remove('hidden');
-      }
-
-      feedList.innerHTML = brews.map(b => {
-        const timeAgo = formatTimeAgo(b.timestamp);
-        const isEsp = b.setup === 'espresso';
-        return `
-          <div class="feed-card">
-            <div>
-              <div style="font-weight:700; display:flex; align-items:center; gap:6px;">
-                <span class="badge" style="background:${isEsp ? 'var(--amber-dark)' : 'var(--emerald-dark)'}; color:${isEsp ? 'var(--amber)' : 'var(--emerald)'};">${b.drink}</span>
-                <span style="color:#ccc; font-size:11px;" class="mono">${b.beanName}</span>
-              </div>
-              <div class="mono" style="font-size:10px; color:var(--text-muted); margin-top:2px;">
-                ${timeAgo} • ${b.dose}g
-              </div>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <div style="text-align:right;" class="mono">
-                <div class="emerald-text" style="font-weight:800; font-size:11px;">+${fmt(b.savings)} KD</div>
-                <div style="font-size:9px; color:var(--text-muted);">Cost: ${fmt(b.cupCost)}</div>
-              </div>
-              <div class="feed-actions">
-                <button type="button" class="icon-btn" onclick="duplicateBrewById('${b.id}')" title="Brew again">↻</button>
-                <button type="button" class="icon-btn" onclick="deleteBrewById('${b.id}')" title="Delete">✕</button>
-              </div>
-            </div>
+  // Render Pantry Beans & Equipment
+  function renderPantry() {
+    // 1. Active Beans
+    activeBeanList.innerHTML = "";
+    const activeBeans = db.beans.filter(b => !b.isFinished);
+    if (activeBeans.length === 0) {
+      activeBeanList.innerHTML = '<div class="empty-state">No active bags in stock.</div>';
+    } else {
+      activeBeans.forEach(bean => {
+        const sub = document.createElement("div");
+        sub.className = "sub-card";
+        const costG = (bean.price / bean.weight).toFixed(3);
+        sub.innerHTML = `
+          <div class="sub-card-row">
+            <span style="font-weight: 600; font-size: 14px;">${bean.name}</span>
+            <span class="mono" style="font-size: 13px; color: var(--text-muted);">${formatKD(bean.price)}</span>
+          </div>
+          <div class="sub-card-row mono" style="font-size: 12px; color: var(--text-muted);">
+            <span>${bean.remainingGrams}g / ${bean.weight}g left &middot; ${costG} KD/g</span>
+            <button class="btn-subtle" data-finish="${bean.id}" style="padding: 3px 8px; font-size: 11px;">Bag Finished</button>
           </div>
         `;
-      }).join('');
-    }
-
-    function formatTimeAgo(ts) {
-      const diffSec = Math.floor((Date.now() - ts) / 1000);
-      if (diffSec < 60) return "Just now";
-      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
-      return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    }
-
-    function duplicateBrewById(id) {
-      triggerHaptic(15);
-      const original = (APP.brews || []).find(b => b.id === id);
-      if (!original) return;
-
-      const activeBeans = (APP.beans || []).filter(b => !b.finished);
-      let bean = activeBeans.find(b => b.id === original.beanId) || activeBeans[0];
-      if (!bean) {
-        displayToast("No active beans available!");
-        return;
-      }
-
-      const dose = original.dose || 18;
-      const cpg = bean.bagWeight > 0 ? (Number(bean.bagPrice) / Number(bean.bagWeight)) : original.costPerG;
-      const cupCost = dose * cpg;
-      const benchmark = original.benchmark || 2.000;
-      const savings = benchmark - cupCost;
-
-      bean.remainingGrams = Math.max(0, Number(bean.remainingGrams || 0) - dose);
-
-      const duplicated = {
-        id: "brew-" + Date.now(),
-        setup: original.setup || 'v60',
-        drink: original.drink,
-        beanId: bean.id,
-        beanName: bean.name,
-        dose,
-        costPerG: cpg,
-        cupCost,
-        benchmark,
-        savings,
-        timestamp: Date.now()
-      };
-
-      APP.brews.unshift(duplicated);
-      saveAppState();
-
-      renderBrewLogger();
-      renderRoiDashboard();
-      renderHistoryFeed();
-      renderPantryView();
-      displayToast(`Brewed again: ${original.drink} (+${fmtCurrency(savings)})`);
-    }
-
-    function duplicateLastBrew() {
-      if (APP.brews && APP.brews.length > 0) {
-        duplicateBrewById(APP.brews[0].id);
-      }
-    }
-
-    function deleteBrewById(id) {
-      triggerHaptic(18);
-      const idx = (APP.brews || []).findIndex(b => b.id === id);
-      if (idx === -1) return;
-
-      const removed = APP.brews.splice(idx, 1)[0];
-
-      // Automatic inventory rollback
-      const bean = (APP.beans || []).find(b => b.id === removed.beanId);
-      if (bean) {
-        bean.remainingGrams = Math.min(Number(bean.bagWeight) * 2, Number(bean.remainingGrams || 0) + Number(removed.dose));
-      }
-
-      saveAppState();
-      renderBrewLogger();
-      renderRoiDashboard();
-      renderHistoryFeed();
-      renderPantryView();
-
-      displayUndoToast(`Deleted ${removed.drink} (${removed.dose}g refunded)`, () => {
-        if (bean) {
-          bean.remainingGrams = Math.max(0, Number(bean.remainingGrams || 0) - Number(removed.dose));
-        }
-        APP.brews.splice(idx, 0, removed);
-        saveAppState();
-        renderBrewLogger();
-        renderRoiDashboard();
-        renderHistoryFeed();
-        renderPantryView();
-        displayToast(`Restored ${removed.drink}`);
+        activeBeanList.appendChild(sub);
       });
     }
 
-    function renderPantryView() {
-      // Active Beans
-      const activeBeans = (APP.beans || []).filter(b => !b.finished);
-      const activeList = document.getElementById('activeBeansList');
-      if (activeBeans.length === 0) {
-        activeList.innerHTML = `<div class="mono" style="font-size:11px; color:var(--text-muted); padding:8px 0;">No active coffee beans. Add a bag above.</div>`;
-      } else {
-        activeList.innerHTML = activeBeans.map(bean => {
-          const cpg = bean.bagWeight > 0 ? (bean.bagPrice / bean.bagWeight) : 0;
-          return `
-            <div style="background:var(--elevated); border:1px solid var(--border-subtle); border-radius:10px; padding:10px; margin-bottom:8px;">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                  <div style="font-weight:700;">${bean.name}</div>
-                  <div class="mono" style="font-size:10px; color:var(--text-muted); margin-top:2px;">
-                    ${bean.remainingGrams}g left of ${bean.bagWeight}g • ${fmt(cpg, 3)} KD/g
-                  </div>
-                </div>
-                <button type="button" class="icon-btn" onclick="deleteBeanById('${bean.id}')">✕</button>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:6px; border-top:1px solid var(--border-subtle);">
-                <button type="button" class="btn-secondary" onclick="resetBeanGrams('${bean.id}')" style="font-size:10px; padding:3px 6px;">Reset ${bean.bagWeight}g</button>
-                <button type="button" class="btn-secondary" onclick="markBeanAsFinished('${bean.id}')" style="font-size:10px; padding:3px 8px; background:var(--emerald-dark); color:var(--emerald); border-color:#065f46; font-weight:700;">
-                  ✓ Bag Finished
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // Archived Beans
-      const archivedBeans = (APP.beans || []).filter(b => b.finished);
-      document.getElementById('archiveCountTag').textContent = `${archivedBeans.length}`;
-      const archivedList = document.getElementById('archivedBeansList');
-      if (archivedBeans.length === 0) {
-        archivedList.innerHTML = `<div class="mono" style="font-size:10px; color:var(--text-muted);">No archived bags.</div>`;
-      } else {
-        archivedList.innerHTML = archivedBeans.map(bean => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
-            <div>
-              <div style="color:#aaa; text-decoration:line-through; font-size:11px;">${bean.name}</div>
-              <div class="mono" style="font-size:9px; color:#555;">${bean.bagWeight}g bag • ${fmtCurrency(bean.bagPrice)}</div>
-            </div>
-            <div style="display:flex; gap:4px;">
-              <button type="button" class="btn-secondary" onclick="reactivateBeanById('${bean.id}')" style="font-size:10px; padding:3px 6px;">Reactivate</button>
-              <button type="button" class="icon-btn" onclick="deleteBeanById('${bean.id}')">✕</button>
-            </div>
+    // 2. Finished Beans Archive
+    finishedBeanList.innerHTML = "";
+    const finishedBeans = db.beans.filter(b => b.isFinished);
+    if (finishedBeans.length === 0) {
+      finishedBeanList.innerHTML = '<div class="empty-state">No archived bags yet.</div>';
+    } else {
+      finishedBeans.forEach(bean => {
+        const sub = document.createElement("div");
+        sub.className = "sub-card";
+        sub.style.opacity = "0.7";
+        sub.innerHTML = `
+          <div class="sub-card-row">
+            <span style="font-size: 13px; color: var(--text-muted);">${bean.name}</span>
+            <button class="btn-subtle" data-reactivate="${bean.id}" style="padding: 2px 6px; font-size: 10px;">Reactivate</button>
           </div>
-        `).join('');
-      }
-
-      // Equipment
-      document.getElementById('gearCountTag').textContent = `${(APP.equipment || []).length}`;
-      const gearList = document.getElementById('equipmentList');
-      gearList.innerHTML = (APP.equipment || []).map(g => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
-          <div>
-            <div style="font-size:11px; font-weight:600;">${g.name}</div>
-            <span class="badge" style="font-size:8px;">${g.setup.toUpperCase()}</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <span class="mono" style="font-size:11px;">${fmtCurrency(g.price)}</span>
-            <button type="button" class="icon-btn" onclick="deleteGearById('${g.id}')">✕</button>
-          </div>
-        </div>
-      `).join('');
-
-      // Benchmark inputs
-      const bm = APP.benchmarks || DEFAULT_DATA.benchmarks;
-      document.getElementById('bmV60').value = bm["V60"] || 2.000;
-      document.getElementById('bmEspresso').value = bm["Espresso"] || 1.250;
-      document.getElementById('bmMilk').value = bm["Flat White"] || 1.750;
-      document.getElementById('bmCortado').value = bm["Cortado"] || 1.500;
-    }
-
-    function toggleAddBeanForm() {
-      document.getElementById('addBeanForm').classList.toggle('hidden');
-    }
-
-    function submitNewBean(e) {
-      e.preventDefault();
-      triggerHaptic(15);
-      const name = document.getElementById('newBeanName').value.trim();
-      const weight = parseFloat(document.getElementById('newBeanWeight').value);
-      const price = parseFloat(document.getElementById('newBeanPrice').value);
-      if (!name || isNaN(weight) || isNaN(price)) return;
-
-      const newBean = { id: "bean-" + Date.now(), name, bagWeight: weight, bagPrice: price, remainingGrams: weight, finished: false };
-      APP.beans.push(newBean);
-      saveAppState();
-
-      document.getElementById('newBeanName').value = '';
-      toggleAddBeanForm();
-      renderBrewLogger();
-      renderPantryView();
-      displayToast(`Added bag: ${name}`);
-    }
-
-    function markBeanAsFinished(id) {
-      triggerHaptic(15);
-      const b = (APP.beans || []).find(x => x.id === id);
-      if (!b) return;
-      openConfirmDialog("Archive Bag?", `Hide "${b.name}" from your daily brewer? History is preserved.`, () => {
-        b.finished = true;
-        saveAppState();
-        renderBrewLogger();
-        renderPantryView();
-        displayToast(`Archived "${b.name}"`);
+        `;
+        finishedBeanList.appendChild(sub);
       });
     }
 
-    function reactivateBeanById(id) {
-      triggerHaptic(12);
-      const b = (APP.beans || []).find(x => x.id === id);
-      if (b) {
-        b.finished = false;
-        saveAppState();
-        renderBrewLogger();
-        renderPantryView();
-        displayToast(`Reactivated "${b.name}"`);
-      }
-    }
-
-    function deleteBeanById(id) {
-      const b = (APP.beans || []).find(x => x.id === id);
-      if (!b) return;
-      openConfirmDialog("Delete Bean?", `Permanently remove "${b.name}"? Past logs remain intact.`, () => {
-        APP.beans = APP.beans.filter(x => x.id !== id);
-        saveAppState();
-        renderBrewLogger();
-        renderPantryView();
-        displayToast("Bean deleted.");
-      });
-    }
-
-    function resetBeanGrams(id) {
-      const b = (APP.beans || []).find(x => x.id === id);
-      if (b) {
-        b.remainingGrams = b.bagWeight;
-        saveAppState();
-        renderBrewLogger();
-        renderPantryView();
-        displayToast(`Reset to ${b.bagWeight}g`);
-      }
-    }
-
-    function toggleAddGearForm() {
-      document.getElementById('addGearForm').classList.toggle('hidden');
-    }
-
-    function submitNewGear(e) {
-      e.preventDefault();
-      triggerHaptic(15);
-      const name = document.getElementById('newGearName').value.trim();
-      const price = parseFloat(document.getElementById('newGearPrice').value);
-      const setup = document.getElementById('newGearSetup').value;
-      if (!name || isNaN(price)) return;
-
-      APP.equipment.push({ id: "eq-" + Date.now(), name, price, setup });
-      saveAppState();
-
-      document.getElementById('newGearName').value = '';
-      document.getElementById('newGearPrice').value = '';
-      toggleAddGearForm();
-      renderRoiDashboard();
-      renderPantryView();
-      displayToast(`Added tool: ${name}`);
-    }
-
-    function deleteGearById(id) {
-      const g = (APP.equipment || []).find(x => x.id === id);
-      if (!g) return;
-      openConfirmDialog("Remove Tool?", `Remove "${g.name}" from your gear cost?`, () => {
-        APP.equipment = APP.equipment.filter(x => x.id !== id);
-        saveAppState();
-        renderRoiDashboard();
-        renderPantryView();
-        displayToast("Tool removed.");
-      });
-    }
-
-    function saveBenchmarkPrices() {
-      triggerHaptic(15);
-      const v60 = parseFloat(document.getElementById('bmV60').value);
-      const esp = parseFloat(document.getElementById('bmEspresso').value);
-      const milk = parseFloat(document.getElementById('bmMilk').value);
-      const cort = parseFloat(document.getElementById('bmCortado').value);
-
-      if (!isNaN(v60)) { APP.benchmarks["V60"] = v60; APP.benchmarks["Ice V60"] = v60 + 0.250; APP.benchmarks["Switch"] = v60; APP.benchmarks["Moka Pot"] = 1.250; }
-      if (!isNaN(esp)) APP.benchmarks["Espresso"] = esp;
-      if (!isNaN(milk)) { APP.benchmarks["Flat White"] = milk; APP.benchmarks["Latte"] = milk; }
-      if (!isNaN(cort)) APP.benchmarks["Cortado"] = cort;
-
-      saveAppState();
-      renderBrewLogger();
-      renderRoiDashboard();
-      displayToast("Benchmark prices saved!");
-    }
-
-    function openExportModal() {
-      triggerHaptic(12);
-      const modal = document.getElementById('exportModal');
-      modal.style.display = 'flex';
-      setExportFilter('all');
-    }
-
-    function closeExportModal() {
-      document.getElementById('exportModal').style.display = 'none';
-    }
-
-    function setExportFilter(type) {
-      APP.exportFilter = type;
-      ['all', 'month', 'custom'].forEach(t => {
-        const btn = document.getElementById('expFilter' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (btn) {
-          if (t === type) btn.classList.add('active');
-          else btn.classList.remove('active');
+    // Finished & Reactivate Handlers
+    activeBeanList.querySelectorAll("[data-finish]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-finish");
+        const b = db.beans.find(x => x.id === id);
+        if (b) {
+          b.isFinished = true;
+          saveState();
+          renderAll();
+          showToast(`Archived ${b.name}`);
         }
       });
-
-      const dateRangeBox = document.getElementById('exportDateRange');
-      if (type === 'custom') dateRangeBox.classList.remove('hidden');
-      else dateRangeBox.classList.add('hidden');
-
-      generateExportSummary();
-    }
-
-    function generateExportSummary() {
-      let brews = [...(APP.brews || [])];
-      const now = Date.now();
-
-      if (APP.exportFilter === 'month') {
-        brews = brews.filter(b => b.timestamp >= (now - 30 * 86400000));
-      } else if (APP.exportFilter === 'custom') {
-        const start = document.getElementById('expStartDate').value;
-        const end = document.getElementById('expEndDate').value;
-        if (start) brews = brews.filter(b => b.timestamp >= new Date(start).getTime());
-        if (end) brews = brews.filter(b => b.timestamp <= (new Date(end).getTime() + 86400000));
-      }
-
-      let totalCost = 0;
-      let totalSaved = 0;
-
-      const lines = brews.map(b => {
-        totalCost += Number(b.cupCost || 0);
-        totalSaved += Number(b.savings || 0);
-        const d = new Date(b.timestamp).toISOString().split('T')[0];
-        return `${d} | [${(b.setup || 'v60').toUpperCase()}] ${b.drink} | ${b.beanName} | ${b.dose}g | Cost: ${fmt(b.cupCost)} KD | Saved: ${fmt(b.savings)} KD`;
-      });
-
-      const summary = `---
-Total Cups: ${brews.length} | Spent: ${fmt(totalCost)} KD | Saved: ${fmt(totalSaved)} KD`;
-
-      document.getElementById('exportTextOutput').value = lines.length > 0 ? (lines.join('\n') + '\n' + summary) : "No coffee logs found in this date range.";
-    }
-
-    function copyExportToClipboard() {
-      triggerHaptic(20);
-      const ta = document.getElementById('exportTextOutput');
-      ta.select();
-      ta.setSelectionRange(0, 99999);
-
-      let success = false;
-      try { success = document.execCommand('copy'); } catch (e) { success = false; }
-
-      if (success) {
-        displayToast("Logs copied to clipboard!");
-        closeExportModal();
-      } else {
-        displayToast("Select and copy text above.");
-      }
-    }
-
-    function openConfirmDialog(title, msg, onOk) {
-      triggerHaptic(15);
-      const modal = document.getElementById('confirmModal');
-      const titleEl = document.getElementById('confirmTitle');
-      const msgEl = document.getElementById('confirmMessage');
-      const cancelBtn = document.getElementById('confirmCancelBtn');
-      const okBtn = document.getElementById('confirmOkBtn');
-
-      titleEl.textContent = title;
-      msgEl.textContent = msg;
-      modal.style.display = 'flex';
-
-      const handleOk = () => {
-        modal.style.display = 'none';
-        cleanup();
-        if (onOk) onOk();
-      };
-      const handleCancel = () => {
-        modal.style.display = 'none';
-        cleanup();
-      };
-      function cleanup() {
-        okBtn.removeEventListener('click', handleOk);
-        cancelBtn.removeEventListener('click', handleCancel);
-      }
-      okBtn.addEventListener('click', handleOk);
-      cancelBtn.addEventListener('click', handleCancel);
-    }
-
-    function displayToast(msg) {
-      const c = document.getElementById('toastContainer');
-      const t = document.createElement('div');
-      t.className = "toast-msg";
-      t.innerHTML = `<span style="color:var(--emerald); font-weight:800;">✓</span> <span>${msg}</span>`;
-      c.innerHTML = '';
-      c.appendChild(t);
-      setTimeout(() => t.remove(), 2500);
-    }
-
-    function displayUndoToast(msg, undoCallback) {
-      const c = document.getElementById('toastContainer');
-      const t = document.createElement('div');
-      t.className = "toast-msg";
-      t.innerHTML = `
-        <span style="truncate">${msg}</span>
-        <button type="button" id="undoBtn" class="btn-main" style="padding:4px 8px; font-size:10px; width:auto;">UNDO</button>
-      `;
-      c.innerHTML = '';
-      c.appendChild(t);
-
-      let clicked = false;
-      const btn = document.getElementById('undoBtn');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          if (!clicked) {
-            clicked = true;
-            t.remove();
-            undoCallback();
-          }
-        });
-      }
-      setTimeout(() => { if (!clicked) t.remove(); }, 5000);
-    }
-
-    function promptFactoryReset() {
-      openConfirmDialog("Reset All App Data?", "This will clear your personal logs and restore default coffee bags, tools, and benchmarks.", () => {
-        APP = JSON.parse(JSON.stringify(DEFAULT_DATA));
-        saveAppState();
-        switchNavTab('brew');
-        displayToast("App restored to clean defaults!");
-      });
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadAppState();
-      renderBrewLogger();
-      renderRoiDashboard();
-      renderHistoryFeed();
-      renderPantryView();
     });
-  </script>
+
+    finishedBeanList.querySelectorAll("[data-reactivate]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-reactivate");
+        const b = db.beans.find(x => x.id === id);
+        if (b) {
+          b.isFinished = false;
+          saveState();
+          renderAll();
+          showToast(`Reactivated ${b.name}`);
+        }
+      });
+    });
+
+    // 3. Equipment
+    gearList.innerHTML = "";
+    if (db.gear.length === 0) {
+      gearList.innerHTML = '<div class="empty-state">No equipment added yet.</div>';
+    } else {
+      db.gear.forEach(item => {
+        const sub = document.createElement("div");
+        sub.className = "sub-card";
+        sub.innerHTML = `
+          <div class="sub-card-row">
+            <span style="font-weight: 500; font-size: 13px;">${item.name}</span>
+            <span class="mono" style="font-size: 13px; font-weight: 600;">${formatKD(item.price)}</span>
+          </div>
+          <div class="sub-card-row">
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">${item.setup}</span>
+            <button class="icon-action-btn del" data-delgear="${item.id}">Remove</button>
+          </div>
+        `;
+        gearList.appendChild(sub);
+      });
+    }
+
+    gearList.querySelectorAll("[data-delgear]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-delgear");
+        db.gear = db.gear.filter(g => g.id !== id);
+        saveState();
+        renderAll();
+        showToast("Equipment removed");
+      });
+    });
+
+    // Populate Baseline Inputs
+    benchV60.value = (db.benchmarks.v60 || 2.000).toFixed(3);
+    benchMilk.value = (db.benchmarks.milk || 1.750).toFixed(3);
+    benchEspresso.value = (db.benchmarks.espresso || 1.250).toFixed(3);
+    benchMoka.value = (db.benchmarks.moka || 1.250).toFixed(3);
+  }
+
+  // Save Baseline Prices
+  saveBenchmarksBtn.addEventListener("click", () => {
+    db.benchmarks.v60 = parseFloat(benchV60.value) || 2.000;
+    db.benchmarks.milk = parseFloat(benchMilk.value) || 1.750;
+    db.benchmarks.espresso = parseFloat(benchEspresso.value) || 1.250;
+    db.benchmarks.moka = parseFloat(benchMoka.value) || 1.250;
+    saveState();
+    updateBrewCalculations();
+    renderROI();
+    showToast("Benchmark prices updated");
+  });
+
+  // Add Bean Modal
+  const addBeanModal = document.getElementById("addBeanModal");
+  document.getElementById("showAddBeanModalBtn").addEventListener("click", () => {
+    addBeanModal.classList.remove("hidden");
+  });
+  document.getElementById("closeAddBeanBtn").addEventListener("click", () => {
+    addBeanModal.classList.add("hidden");
+  });
+  document.getElementById("saveNewBeanBtn").addEventListener("click", () => {
+    const name = document.getElementById("newBeanName").value.trim();
+    const weight = parseFloat(document.getElementById("newBeanWeight").value) || 250;
+    const price = parseFloat(document.getElementById("newBeanPrice").value) || 0;
+    if (!name) {
+      showToast("Please enter a bean name");
+      return;
+    }
+    db.beans.unshift({
+      id: "b_" + Date.now(),
+      name: name,
+      weight: weight,
+      price: price,
+      remainingGrams: weight,
+      isFinished: false
+    });
+    document.getElementById("newBeanName").value = "";
+    saveState();
+    addBeanModal.classList.add("hidden");
+    renderAll();
+    showToast(`Added ${name}`);
+  });
+
+  // Add Gear Modal
+  const addGearModal = document.getElementById("addGearModal");
+  document.getElementById("showAddGearModalBtn").addEventListener("click", () => {
+    addGearModal.classList.remove("hidden");
+  });
+  document.getElementById("closeAddGearBtn").addEventListener("click", () => {
+    addGearModal.classList.add("hidden");
+  });
+  document.getElementById("saveNewGearBtn").addEventListener("click", () => {
+    const name = document.getElementById("newGearName").value.trim();
+    const price = parseFloat(document.getElementById("newGearPrice").value) || 0;
+    const setup = document.getElementById("newGearSetup").value;
+    if (!name) {
+      showToast("Please enter an equipment name");
+      return;
+    }
+    db.gear.push({
+      id: "g_" + Date.now(),
+      name: name,
+      price: price,
+      setup: setup
+    });
+    document.getElementById("newGearName").value = "";
+    document.getElementById("newGearPrice").value = "";
+    saveState();
+    addGearModal.classList.add("hidden");
+    renderAll();
+    showToast(`Added ${name}`);
+  });
+
+  // Export Log Modal
+  const exportModal = document.getElementById("exportModal");
+  const exportContent = document.getElementById("exportContent");
+  let exportFilter = "all";
+
+  document.getElementById("openExportBtn").addEventListener("click", () => {
+    generateExportText();
+    exportModal.classList.remove("hidden");
+  });
+  document.getElementById("closeExportBtn").addEventListener("click", () => {
+    exportModal.classList.add("hidden");
+  });
+  document.getElementById("exportRangeAll").addEventListener("click", function() {
+    exportFilter = "all";
+    this.classList.add("active");
+    document.getElementById("exportRange30").classList.remove("active");
+    generateExportText();
+  });
+  document.getElementById("exportRange30").addEventListener("click", function() {
+    exportFilter = "30";
+    this.classList.add("active");
+    document.getElementById("exportRangeAll").classList.remove("active");
+    generateExportText();
+  });
+
+  function generateExportText() {
+    const now = Date.now();
+    const filtered = db.brews.filter(b => {
+      if (exportFilter === "30") {
+        return (now - b.timestamp) <= 30 * 24 * 60 * 60 * 1000;
+      }
+      return true;
+    });
+
+    let lines = [];
+    lines.push("BREWLOG SUMMARY");
+    lines.push("----------------------------------------");
+    let totalSpend = 0;
+    let totalSaved = 0;
+
+    filtered.forEach(b => {
+      const d = new Date(b.timestamp).toISOString().split("T")[0];
+      lines.push(`${d} | ${b.drinkLabel} | ${b.beanName} | ${b.dose}g | Cost: ${formatKD(b.cupCost)} | Saved: ${formatKD(b.netSaved)}`);
+      totalSpend += (b.cupCost || 0);
+      totalSaved += (b.netSaved || 0);
+    });
+
+    lines.push("----------------------------------------");
+    lines.push(`Total Brews: ${filtered.length}`);
+    lines.push(`Total Spent on Coffee: ${formatKD(totalSpend)}`);
+    lines.push(`Total Net Saved: ${formatKD(totalSaved)}`);
+
+    exportContent.value = lines.join("\n");
+  }
+
+  document.getElementById("copyClipboardBtn").addEventListener("click", () => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(exportContent.value).then(() => {
+        showToast("Log copied to clipboard");
+      });
+    } else {
+      exportContent.select();
+      document.execCommand("copy");
+      showToast("Log copied to clipboard");
+    }
+  });
+
+  // Reset App Data
+  document.getElementById("resetAppDataBtn").addEventListener("click", () => {
+    if (confirm("Reset all brewing logs, beans, and return to default data?")) {
+      db = getDefaultData();
+      saveState();
+      renderAll();
+      showToast("App reset to defaults");
+    }
+  });
+
+  // Toast Notification System
+  function showToast(msg, undoCallback) {
+    const container = document.getElementById("toastContainer");
+    const toast = document.createElement("div");
+    toast.className = "toast";
+
+    const msgSpan = document.createElement("span");
+    msgSpan.textContent = msg;
+    toast.appendChild(msgSpan);
+
+    if (undoCallback) {
+      const undoBtn = document.createElement("button");
+      undoBtn.className = "toast-undo";
+      undoBtn.textContent = "Undo";
+      undoBtn.addEventListener("click", () => {
+        undoCallback();
+        toast.remove();
+      });
+      toast.appendChild(undoBtn);
+    }
+
+    container.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) toast.remove();
+    }, 4500);
+  }
+
+  // Master Render
+  function renderAll() {
+    populateBeanSelect();
+    renderROI();
+    renderLogs();
+    renderPantry();
+  }
+
+  // Initialize
+  renderAll();
+
+})();
+</script>
+
 </body>
 </html>
