@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -9,496 +9,782 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>BrewLog ROI</title>
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons CDN -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Tailwind Configuration -->
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            oled: '#000000',
-            surface: {
-              card: '#121212',
-              elevated: '#1a1a1a',
-              border: '#262626',
-              borderSubtle: '#1f1f1f'
-            }
-          },
-          fontFamily: {
-            mono: ['JetBrains Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Hardcoded Base CSS (Ensures styling never breaks even if CDN lags) -->
   <style>
-    * {
-      -webkit-tap-highlight-color: transparent;
+    /* ZERO-DEPENDENCY OLED DESIGN SYSTEM */
+    *, *::before, *::after {
       box-sizing: border-box;
-    }
-    html, body {
-      background-color: #000000 !important;
-      color: #ffffff !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    :root {
+      --bg: #000000;
+      --card: #121212;
+      --card-hover: #181818;
+      --elevated: #1e1e1e;
+      --border: #262626;
+      --border-subtle: #1c1c1c;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --emerald: #10b981;
+      --emerald-dark: #064e3b;
+      --amber: #f59e0b;
+      --amber-dark: #78350f;
+      --red: #ef4444;
+      --red-dark: #450a0a;
+      --mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
       min-height: 100vh;
-      width: 100%;
+      display: flex;
+      justify-content: center;
+      overflow-x: hidden;
+      font-size: 13px;
+      line-height: 1.4;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    .hidden {
-      display: none !important;
-    }
+    .mono { font-family: var(--mono); }
     .mono-num {
-      font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+      font-family: var(--mono);
       font-feature-settings: "tnum" 1;
       font-variant-numeric: tabular-nums;
     }
+    #appContainer {
+      width: 100%;
+      max-width: 440px;
+      min-height: 100vh;
+      background-color: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 14px 40px 14px;
+      border-left: 1px solid var(--border-subtle);
+      border-right: 1px solid var(--border-subtle);
+      position: relative;
+    }
+    /* HEADER */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 8px 0 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-title {
+      font-family: var(--mono);
+      font-weight: 900;
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .brand-tag {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-left: 2px;
+    }
+    .btn-header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: #ddd;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+    .btn-header:active { transform: scale(0.96); background: var(--elevated); }
+
+    /* NAV TABS */
+    nav.tab-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-top: 10px;
+      position: sticky;
+      top: 50px;
+      z-index: 20;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 4px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: var(--mono);
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: #000000;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    /* CARDS & PANELS */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--elevated);
+      color: #ccc;
+    }
+
+    /* INPUTS & SELECTS */
+    select, input[type="text"], input[type="number"], input[type="date"], textarea {
+      width: 100%;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #ffffff;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 9px 12px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    select:focus, input:focus, textarea:focus {
+      border-color: #666666;
+    }
+    .select-wrap {
+      position: relative;
+    }
+    .select-arrow {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
     input[type=range] {
+      width: 100%;
+      height: 6px;
+      background: #282828;
+      border-radius: 4px;
+      outline: none;
+      appearance: none;
       accent-color: #ffffff;
+      cursor: pointer;
     }
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-      -webkit-appearance: none; 
-      margin: 0; 
+
+    /* QUICK CHIPS */
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 8px;
     }
-    input[type=number] {
-      -moz-appearance: textfield;
+    .chip-btn {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 6px 0;
+      text-align: center;
+      font-size: 11px;
+      font-family: var(--mono);
+      cursor: pointer;
     }
-    /* Smooth toast entrance */
-    @keyframes slideUp {
-      from { transform: translateY(16px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    .chip-btn.active {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 800;
+      border-color: #ffffff;
     }
-    .slide-up-enter {
-      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    /* FINANCIAL PREVIEW BANNER */
+    .financial-preview {
+      background: var(--elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+      font-family: var(--mono);
     }
+    .preview-col-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
+    .preview-col-val { font-size: 12px; font-weight: 800; margin-top: 2px; }
+    .emerald-text { color: var(--emerald); }
+
+    /* ACTION BUTTONS */
+    .btn-main {
+      width: 100%;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+    }
+    .btn-main:active { transform: scale(0.98); background: #e5e5e5; }
+    .btn-secondary {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-family: var(--mono);
+      cursor: pointer;
+    }
+
+    /* HERO BREAK-EVEN CARD */
+    .hero-stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 10px;
+      margin-top: 12px;
+    }
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: #222222;
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 10px 0 6px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #ffffff;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* FEED CARDS */
+    .feed-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .feed-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .icon-btn {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: #aaa;
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .icon-btn:active { transform: scale(0.92); color: #fff; }
+
+    /* MODALS & OVERLAYS */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 360px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      font-family: var(--mono);
+    }
+
+    /* TOAST NOTIFICATION */
+    #toastContainer {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      pointer-events: none;
+      width: 90%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .toast-msg {
+      pointer-events: auto;
+      background: #1c1c1c;
+      border: 1px solid var(--border);
+      color: #fff;
+      font-size: 11px;
+      font-family: var(--mono);
+      padding: 10px 14px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
-<body class="bg-oled text-white min-h-screen font-sans antialiased overflow-x-hidden flex justify-center selection:bg-zinc-800">
+<body>
 
-  <!-- Mobile Viewport Shell (Max 448px width, centered on larger screens) -->
-  <div id="appContainer" class="w-full max-w-md min-h-screen bg-oled flex flex-col relative px-4 pb-20 pt-3 border-x border-[#1a1a1a]">
+  <div id="appContainer">
 
-    <!-- 1. TOP HEADER -->
-    <header class="sticky top-0 z-30 bg-oled/95 backdrop-blur-md py-2.5 flex items-center justify-between border-b border-surface-border">
-      <div class="flex items-center gap-2">
-        <div id="topBrandIconContainer" class="w-6 h-6 rounded-lg bg-surface-elevated border border-surface-border flex items-center justify-center overflow-hidden p-0.5 shadow-sm">
-          <!-- Coffee Bean Vector Icon -->
-          <svg viewBox="0 0 24 24" class="w-4 h-4 text-emerald-400 fill-current" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79.09.43.23.85.42 1.25 1.05 2.16 3.19 3.54 5.57 3.54h.8v4.93zm0-6.93h-.8c-1.68 0-3.19-.98-3.93-2.5-.27-.56-.42-1.18-.42-1.83 0-3.37 2.45-6.17 5.15-6.6v10.93zm2 4.93v-4.93h.8c2.38 0 4.52-1.38 5.57-3.54.19-.4.33-.82.42-1.25.13.58.21 1.17.21 1.79 0 4.08-3.05 7.44-7 7.93zm0-6.93V4.07c2.7.43 5.15 3.23 5.15 6.6 0 .65-.15 1.27-.42 1.83-.74 1.52-2.25 2.5-3.93 2.5h-.8z"/>
-          </svg>
-        </div>
-        <h1 class="text-sm font-extrabold tracking-widest uppercase text-white font-mono">
-          BREWLOG<span class="text-zinc-500 text-xs font-normal ml-1">ROI</span>
-        </h1>
+    <!-- HEADER -->
+    <header>
+      <div class="brand-title">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#10b981">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79.09.43.23.85.42 1.25 1.05 2.16 3.19 3.54 5.57 3.54h.8v4.93zm0-6.93h-.8c-1.68 0-3.19-.98-3.93-2.5-.27-.56-.42-1.18-.42-1.83 0-3.37 2.45-6.17 5.15-6.6v10.93zm2 4.93v-4.93h.8c2.38 0 4.52-1.38 5.57-3.54.19-.4.33-.82.42-1.25.13.58.21 1.17.21 1.79 0 4.08-3.05 7.44-7 7.93zm0-6.93V4.07c2.7.43 5.15 3.23 5.15 6.6 0 .65-.15 1.27-.42 1.83-.74 1.52-2.25 2.5-3.93 2.5h-.8z"/>
+        </svg>
+        <span>BREWLOG</span><span class="brand-tag">ROI</span>
       </div>
-
-      <div class="flex items-center gap-1.5">
-        <button id="topCopyLogBtn" onclick="openExportModal()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-card hover:bg-surface-elevated text-zinc-300 hover:text-white border border-surface-border active:scale-95 transition text-[11px] font-medium font-mono">
-          <i data-lucide="clipboard-copy" class="w-3.5 h-3.5 text-zinc-400"></i>
-          <span>Copy</span>
-        </button>
-      </div>
+      <button type="button" class="btn-header" onclick="openExportModal()">
+        <span>📋</span>
+        <span>Export</span>
+      </button>
     </header>
 
-    <!-- 2. DECLUTTERED TOP TAB NAVIGATION BAR -->
-    <nav class="grid grid-cols-4 p-1 bg-surface-card rounded-xl border border-surface-border gap-1 font-mono text-[11px] mt-3 sticky top-14 z-20 shadow-lg">
-      <button id="navTabBrew" onclick="switchNavTab('brew')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 bg-white text-black shadow-sm">
-        <i data-lucide="coffee" class="w-3.5 h-3.5"></i>
-        <span>Brew</span>
-      </button>
-      <button id="navTabRoi" onclick="switchNavTab('roi')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 text-zinc-400 hover:text-white">
-        <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
-        <span>ROI</span>
-      </button>
-      <button id="navTabHistory" onclick="switchNavTab('history')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 text-zinc-400 hover:text-white">
-        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-        <span>Logs</span>
-      </button>
-      <button id="navTabPantry" onclick="switchNavTab('pantry')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 text-zinc-400 hover:text-white">
-        <i data-lucide="package" class="w-3.5 h-3.5"></i>
-        <span>Pantry</span>
-      </button>
+    <!-- 4 TABS -->
+    <nav class="tab-bar">
+      <button type="button" id="tabNavBrew" class="tab-btn active" onclick="switchNavTab('brew')">☕ Brew</button>
+      <button type="button" id="tabNavRoi" class="tab-btn" onclick="switchNavTab('roi')">📈 ROI</button>
+      <button type="button" id="tabNavHistory" class="tab-btn" onclick="switchNavTab('history')">📜 Logs</button>
+      <button type="button" id="tabNavPantry" class="tab-btn" onclick="switchNavTab('pantry')">📦 Pantry</button>
     </nav>
 
-    <!-- MAIN SCROLLABLE CONTENT AREAS -->
-    <main class="space-y-4 pt-3 flex-1">
+    <!-- MAIN VIEWS -->
+    <main>
 
-      <!-- ================= TAB 1: CLEAN BREW LOGGER ================= -->
-      <section id="viewTabBrew" class="space-y-3.5">
-        <div class="bg-surface-card rounded-2xl p-4 border border-surface-border space-y-4 shadow-sm">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-mono uppercase tracking-wider text-white font-bold flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Quick Coffee Logger</span>
-            </span>
-            <button id="repeatLastBtn" onclick="duplicateLastBrew()" class="hidden text-[10px] font-mono px-2.5 py-1 rounded-lg bg-surface-elevated border border-surface-border text-zinc-300 hover:text-white flex items-center gap-1 active:scale-95 transition" title="Repeat last brew">
-              <i data-lucide="rotate-cw" class="w-3 h-3 text-emerald-400"></i>
-              <span>Repeat Last</span>
-            </button>
+      <!-- TAB 1: BREW LOGGER -->
+      <section id="viewBrew" class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span style="font-family:var(--mono); font-size:11px; text-transform:uppercase; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
+            <span style="width:7px; height:7px; border-radius:50%; background:var(--emerald);"></span>
+            <span>Quick Coffee Logger</span>
+          </span>
+          <button type="button" id="repeatLastBtn" onclick="duplicateLastBrew()" class="hidden btn-secondary" style="font-size:10px; padding:4px 8px;">
+            ↺ Repeat Last
+          </button>
+        </div>
+
+        <!-- Drink Selector -->
+        <div class="form-group">
+          <label for="drinkSelect" class="form-label">
+            <span>Drink Type</span>
+            <span id="drinkSetupBadge" class="badge">V60 Filter Setup</span>
+          </label>
+          <div class="select-wrap">
+            <select id="drinkSelect" onchange="handleDrinkChange()">
+              <option value="V60" data-setup="v60">☕ V60 Pour Over</option>
+              <option value="Ice V60" data-setup="v60">❄️ Ice V60</option>
+              <option value="Switch" data-setup="v60">🔀 Hario Switch</option>
+              <option value="Moka Pot" data-setup="v60">♨️ Moka Pot</option>
+              <option value="Espresso" data-setup="espresso">⚡ Espresso (Double)</option>
+              <option value="Flat White" data-setup="espresso">🥛 Flat White</option>
+              <option value="Latte" data-setup="espresso">☕🥛 Cafe Latte</option>
+              <option value="Cortado" data-setup="espresso">🥃 Cortado</option>
+            </select>
+            <div class="select-arrow">▼</div>
           </div>
+        </div>
 
-          <!-- 1. What are you brewing? (Dropdown) -->
-          <div class="space-y-1.5">
-            <label class="text-[11px] font-mono text-zinc-400 uppercase tracking-wide flex items-center justify-between">
-              <span>Drink Type</span>
-              <span id="drinkSetupBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-surface-elevated text-zinc-300 border border-surface-borderSubtle">V60 Filter Setup</span>
-            </label>
-            <div class="relative">
-              <select id="quickDrinkSelect" onchange="handleDrinkSelectChange()" class="w-full bg-surface-elevated border border-surface-border rounded-xl px-3 py-2.5 text-xs font-mono text-white outline-none focus:border-zinc-400 cursor-pointer appearance-none">
-                <option value="V60" data-setup="v60">☕ V60 Pour Over</option>
-                <option value="Ice V60" data-setup="v60">❄️ Ice V60</option>
-                <option value="Switch" data-setup="v60">🔀 Hario Switch</option>
-                <option value="Moka Pot" data-setup="v60">♨️ Moka Pot</option>
-                <option value="Espresso" data-setup="espresso">⚡ Espresso (Double)</option>
-                <option value="Flat White" data-setup="espresso">🥛 Flat White</option>
-                <option value="Latte" data-setup="espresso">☕🥛 Cafe Latte</option>
-                <option value="Cortado" data-setup="espresso">🥃 Cortado</option>
-              </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
-                <i data-lucide="chevron-down" class="w-4 h-4"></i>
-              </div>
-            </div>
+        <!-- Bean Selector -->
+        <div class="form-group">
+          <div class="form-label">
+            <span>Active Coffee Beans</span>
+            <button type="button" onclick="switchNavTab('pantry')" style="background:none; border:none; color:var(--text-muted); text-decoration:underline; font-size:10px; font-family:var(--mono); cursor:pointer;">+ Manage</button>
           </div>
-
-          <!-- 2. Coffee Beans In-Stock (Dropdown) -->
-          <div class="space-y-1.5">
-            <div class="flex items-center justify-between">
-              <label class="text-[11px] font-mono text-zinc-400 uppercase tracking-wide">Active Coffee Beans</label>
-              <button onclick="switchNavTab('pantry')" class="text-[10px] text-zinc-500 hover:text-zinc-300 underline font-mono">+ Manage Beans</button>
-            </div>
-            <div class="relative">
-              <select id="quickBeanSelect" onchange="handleBeanSelectChange()" class="w-full bg-surface-elevated border border-surface-border rounded-xl px-3 py-2.5 text-xs font-mono text-white outline-none focus:border-zinc-400 cursor-pointer appearance-none">
-                <!-- Populated via JS (only non-finished bags) -->
-              </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
-                <i data-lucide="chevron-down" class="w-4 h-4"></i>
-              </div>
-            </div>
-            <div id="noActiveBeansWarning" class="hidden text-[10px] text-amber-400 font-mono pt-1">
-              ⚠️ All bags are marked finished! Open the Pantry tab to add or unmark a bag.
-            </div>
+          <div class="select-wrap">
+            <select id="beanSelect" onchange="handleBeanChange()"></select>
+            <div class="select-arrow">▼</div>
           </div>
+          <div id="noBeansAlert" class="hidden" style="color:var(--amber); font-size:10px; font-family:var(--mono); margin-top:4px;">
+            ⚠️ All bags finished! Tap Pantry to add or restore a bag.
+          </div>
+        </div>
 
-          <!-- 3. Dose Slider + Editable Number Input -->
-          <div class="space-y-2 pt-1">
-            <div class="flex items-center justify-between">
-              <label class="text-[11px] font-mono text-zinc-400 uppercase tracking-wide">Coffee Dose</label>
-              <div class="flex items-center gap-1">
-                <input type="number" id="customDoseInput" step="0.5" min="6" max="50" value="18" oninput="handleDoseInput(this.value)" class="w-14 py-1 px-1 bg-surface-elevated border border-surface-border rounded-lg text-center text-xs font-mono font-bold text-white outline-none focus:border-zinc-300">
-                <span class="text-xs font-mono text-zinc-400">g</span>
-              </div>
-            </div>
-
-            <!-- Smooth Range Slider -->
-            <input type="range" id="doseSlider" min="8" max="32" step="0.5" value="18" oninput="handleDoseSlider(this.value)" class="w-full h-1.5 bg-[#252525] rounded-lg appearance-none cursor-pointer accent-white">
-
-            <!-- Dose Quick Presets -->
-            <div class="flex items-center justify-between gap-2 pt-1 font-mono text-xs">
-              <button type="button" onclick="setQuickDose(15)" class="dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition">15g</button>
-              <button type="button" onclick="setQuickDose(18)" class="dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition">18g</button>
-              <button type="button" onclick="setQuickDose(20)" class="dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition">20g</button>
-              <button type="button" onclick="setQuickDose(22)" class="dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition">22g</button>
+        <!-- Dose Controls -->
+        <div class="form-group">
+          <div class="form-label">
+            <span>Coffee Dose</span>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="number" id="doseNumberInput" step="0.5" min="6" max="50" value="18" oninput="handleDoseInput(this.value)" style="width:55px; padding:4px; text-align:center;">
+              <span class="mono" style="font-size:11px; color:var(--text-muted);">g</span>
             </div>
           </div>
+          <input type="range" id="doseSlider" min="8" max="32" step="0.5" value="18" oninput="handleDoseSlider(this.value)">
 
-          <!-- Financial Snapshot Banner -->
-          <div class="p-3 rounded-xl bg-surface-elevated border border-surface-borderSubtle flex items-center justify-between text-xs font-mono">
+          <div class="chip-grid">
+            <button type="button" class="chip-btn" onclick="setPresetDose(15)">15g</button>
+            <button type="button" class="chip-btn active" onclick="setPresetDose(18)">18g</button>
+            <button type="button" class="chip-btn" onclick="setPresetDose(20)">20g</button>
+            <button type="button" class="chip-btn" onclick="setPresetDose(22)">22g</button>
+          </div>
+        </div>
+
+        <!-- Live Financial Preview -->
+        <div class="financial-preview">
+          <div>
+            <div class="preview-col-label">Cup Cost</div>
+            <div id="liveCupCost" class="preview-col-val">0.000 KD</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="preview-col-label">Net Saved vs Cafe</div>
+            <div id="liveCupSavings" class="preview-col-val emerald-text">+0.000 KD</div>
+          </div>
+        </div>
+
+        <!-- Log Cup Button -->
+        <button type="button" id="logCupBtn" class="btn-main" onclick="logCupNow()">
+          <span>+ Log Brewed Cup</span>
+          <span id="logCupSavingsTag" class="mono" style="font-size:11px; color:#065f46;">(+0.000 KD)</span>
+        </button>
+      </section>
+
+      <!-- TAB 2: ROI BREAK-EVEN -->
+      <section id="viewRoi" class="hidden">
+        <!-- Setup Switcher -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:4px; margin-top:12px;">
+          <button type="button" id="btnModeV60" onclick="switchSetupMode('v60')" class="tab-btn active">☕ V60 Filter</button>
+          <button type="button" id="btnModeEspresso" onclick="switchSetupMode('espresso')" class="tab-btn">⚡ Espresso</button>
+        </div>
+
+        <!-- Financial Amortization Card -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; text-transform:uppercase;">
+            <span id="heroSetupTag" class="badge">V60 SETUP</span>
+            <span id="heroPercentTag" style="font-weight:700;">0% Amortized</span>
+          </div>
+
+          <div style="margin:10px 0 4px 0; display:flex; align-items:baseline; gap:6px;">
+            <div id="heroBalanceNumber" class="mono-num" style="font-size:36px; font-weight:900;">0.000</div>
+            <div id="heroCurrencyLabel" class="mono" style="font-size:14px; color:var(--text-muted);">KD</div>
+          </div>
+
+          <div class="progress-track">
+            <div id="heroProgressBar" class="progress-fill"></div>
+          </div>
+
+          <div class="hero-stat-row">
+            <div>Cups: <span id="statCups" style="color:#fff; font-weight:700;">0</span></div>
+            <div>Saved: <span id="statSaved" class="emerald-text" style="font-weight:700;">+0.000 KD</span></div>
+            <div>Gear: <span id="statGear" style="color:#ddd; font-weight:700;">0.000 KD</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: LOGS & HISTORY -->
+      <section id="viewHistory" class="hidden" style="margin-top:12px;">
+        <div style="display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+          <span>BREW HISTORY</span>
+          <span id="historyCountBadge">0 entries</span>
+        </div>
+
+        <div id="feedList"></div>
+
+        <div id="feedEmptyNotice" class="card hidden" style="text-align:center; padding:30px 14px; border-style:dashed;">
+          <div class="mono" style="font-size:12px; color:var(--text-muted);">No coffee logged yet</div>
+          <div class="mono" style="font-size:10px; color:#555; margin-top:4px;">Use the Brew tab to log your first extraction.</div>
+        </div>
+      </section>
+
+      <!-- TAB 4: PANTRY & SETTINGS -->
+      <section id="viewPantry" class="hidden" style="margin-top:12px;">
+        
+        <!-- Coffee Beans Section -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <div>
-              <div class="text-[10px] text-zinc-500 uppercase">Cup Cost</div>
-              <div id="inlinePreviewCost" class="font-bold text-white">0.000 KD</div>
+              <div style="font-weight:700; font-size:12px;">Coffee Beans In-Stock</div>
+              <div class="mono" style="font-size:10px; color:var(--text-muted);">Tap "Bag Finished" when empty</div>
             </div>
-            <div class="text-right">
-              <div class="text-[10px] text-zinc-500 uppercase">Net Saved vs Cafe</div>
-              <div id="inlinePreviewSavings" class="font-bold text-emerald-400">+0.000 KD</div>
+            <button type="button" class="btn-secondary" onclick="toggleAddBeanForm()">+ Add</button>
+          </div>
+
+          <!-- Add Bean Inline Form -->
+          <form id="addBeanForm" class="hidden" onsubmit="submitNewBean(event)" style="background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:10px;">
+            <div class="form-group">
+              <label for="newBeanName" class="form-label">Roaster & Origin</label>
+              <input type="text" id="newBeanName" placeholder="e.g. Earth - Ethiopia" required>
             </div>
-          </div>
-
-          <!-- Full-Width Log Button -->
-          <button id="inlineLogBtn" onclick="logBrewNow()" class="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 active:scale-[0.99] text-black font-bold text-xs tracking-wide transition flex items-center justify-center gap-1.5 shadow-md">
-            <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
-            <span>Log Brewed Cup</span>
-            <span id="inlineLogSavingsBadge" class="text-[11px] font-mono text-emerald-700 font-semibold ml-1">(+0.000 KD)</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- ================= TAB 2: ROI & BREAK-EVEN ================= -->
-      <section id="viewTabRoi" class="hidden space-y-4">
-        <!-- SETUP SWITCHER -->
-        <div class="grid grid-cols-2 p-1 bg-surface-card rounded-xl border border-surface-border gap-1 font-mono text-xs">
-          <button id="tabBtnV60" onclick="switchMode('v60')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 bg-white text-black shadow-sm">
-            <span>☕ V60 Filter</span>
-          </button>
-          <button id="tabBtnEspresso" onclick="switchMode('espresso')" class="py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white">
-            <span>⚡ Espresso Bar</span>
-          </button>
-        </div>
-
-        <!-- HERO FINANCIAL CARD -->
-        <div id="heroCard" class="bg-surface-card rounded-2xl p-4 border border-surface-border relative overflow-hidden transition-all duration-300">
-          <div class="flex items-center justify-between text-[11px] font-mono tracking-wider uppercase">
-            <span id="heroStatusLabel" class="text-zinc-400 flex items-center gap-1.5">
-              <span id="heroModePill" class="px-1.5 py-0.5 rounded bg-surface-elevated text-[10px] text-zinc-300 font-semibold border border-surface-borderSubtle">V60</span>
-              <span>Break-Even</span>
-            </span>
-            <span id="heroPercentBadge" class="text-zinc-300 font-bold">0% Amortized</span>
-          </div>
-
-          <div class="mt-2 flex items-baseline gap-2">
-            <h2 id="heroMainAmount" class="text-3xl sm:text-4xl font-black tracking-tight text-white mono-num">
-              0.000
-            </h2>
-            <span id="heroCurrencyBadge" class="text-sm font-semibold text-zinc-400 mono-num">KD</span>
-          </div>
-
-          <!-- 3px Minimalist Progress Line -->
-          <div class="w-full bg-[#202020] rounded-full h-[3px] mt-3 overflow-hidden">
-            <div id="heroProgressBar" class="h-full bg-white transition-all duration-500" style="width: 0%;"></div>
-          </div>
-
-          <!-- Financial Row -->
-          <div class="mt-3 pt-2.5 border-t border-surface-borderSubtle flex items-center justify-between text-[11px] font-mono text-zinc-400">
-            <div>Cups: <span id="statCupsCount" class="text-white font-semibold">0</span></div>
-            <div class="text-zinc-600">•</div>
-            <div>Saved: <span id="statTotalSaved" class="text-emerald-400 font-semibold">+0.000 KD</span></div>
-            <div class="text-zinc-600">•</div>
-            <div>Gear: <span id="statGearTotal" class="text-zinc-200 font-semibold">0.000 KD</span></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= TAB 3: LOGS & HISTORY ================= -->
-      <section id="viewTabHistory" class="hidden space-y-3">
-        <div class="flex items-center justify-between text-xs font-mono">
-          <span class="text-zinc-400 uppercase tracking-wider text-[11px] font-semibold">Brew History</span>
-          <span id="feedCountBadge" class="text-zinc-500 text-[11px]">0 entries</span>
-        </div>
-
-        <div id="brewFeedList" class="space-y-1.5">
-          <!-- Populated via JS -->
-        </div>
-
-        <div id="feedEmptyState" class="hidden py-8 text-center border border-dashed border-surface-border rounded-2xl">
-          <p class="text-xs text-zinc-400 font-mono">No coffee logged yet</p>
-          <p class="text-[11px] text-zinc-600 font-mono mt-0.5">Use the Brew tab to log your first cup.</p>
-        </div>
-      </section>
-
-      <!-- ================= TAB 4: PANTRY & INVENTORY ================= -->
-      <section id="viewTabPantry" class="hidden space-y-4">
-
-        <!-- Active Coffee Beans Section -->
-        <div class="bg-surface-card rounded-2xl p-4 border border-surface-border space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="space-y-0.5">
-              <span class="font-bold text-white uppercase text-xs tracking-wider">Coffee Beans In-Stock</span>
-              <div class="text-[10px] text-zinc-500 font-mono">Tap "Bag Finished" when a bag is empty</div>
-            </div>
-            <button onclick="toggleBeanForm()" id="toggleBeanFormBtn" class="text-xs text-white bg-surface-elevated border border-surface-border px-2.5 py-1 rounded-lg font-mono hover:bg-[#222]">
-              + Add Bean
-            </button>
-          </div>
-
-          <!-- Inline Add Bean Form -->
-          <form id="addBeanForm" onsubmit="handleAddBeanSubmit(event)" class="hidden bg-surface-elevated p-3 rounded-xl border border-surface-border space-y-2.5">
-            <input type="text" id="newBeanName" placeholder="Roaster - Origin / Name" class="w-full bg-[#111] border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-zinc-400 font-mono" required>
-            <div class="grid grid-cols-2 gap-2 font-mono">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="form-group">
               <div>
-                <label class="text-[10px] text-zinc-400">Bag Weight (g)</label>
-                <input type="number" id="newBeanWeight" placeholder="250" value="250" min="1" step="1" class="w-full bg-[#111] border border-surface-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-zinc-400" required>
+                <label for="newBeanWeight" class="form-label">Weight (g)</label>
+                <input type="number" id="newBeanWeight" placeholder="250" value="250" required>
               </div>
               <div>
-                <label class="text-[10px] text-zinc-400">Bag Price (<span class="currency-label">KD</span>)</label>
-                <input type="number" id="newBeanPrice" placeholder="5.500" min="0.001" step="0.025" class="w-full bg-[#111] border border-surface-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-zinc-400" required>
+                <label for="newBeanPrice" class="form-label">Price (KD)</label>
+                <input type="number" id="newBeanPrice" step="0.050" placeholder="5.500" required>
               </div>
             </div>
-            <div class="flex gap-2 pt-1 font-mono">
-              <button type="button" onclick="toggleBeanForm()" class="flex-1 py-1.5 rounded-lg bg-surface-card text-zinc-400 hover:text-white border border-surface-border text-[11px]">Cancel</button>
-              <button type="submit" class="flex-1 py-1.5 rounded-lg bg-white text-black font-semibold text-[11px]">Save Bean</button>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="btn-secondary" onclick="toggleAddBeanForm()" style="flex:1;">Cancel</button>
+              <button type="submit" class="btn-main" style="flex:1; padding:8px; font-size:11px;">Save Bag</button>
             </div>
           </form>
 
           <!-- Active Beans List -->
-          <div id="drawerBeansList" class="space-y-2 font-mono">
-            <!-- Rendered via JS -->
-          </div>
+          <div id="activeBeansList"></div>
         </div>
 
-        <!-- Finished / Archived Bags Collapsible Section -->
-        <div class="bg-surface-card rounded-2xl border border-surface-border overflow-hidden">
-          <details class="group p-4">
-            <summary class="flex items-center justify-between cursor-pointer list-none select-none font-mono">
-              <div class="space-y-0.5">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-white uppercase text-xs tracking-wider">Finished Bags Archive</span>
-                  <span id="finishedBagsCountBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-surface-elevated text-zinc-400 border border-surface-borderSubtle">0 bags</span>
-                </div>
-                <div class="text-[10px] text-zinc-500">Hidden from daily logger • Tap to expand / restore</div>
+        <!-- Finished Bags Archive -->
+        <div class="card" style="padding:10px 14px;">
+          <details>
+            <summary style="font-family:var(--mono); font-size:11px; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-weight:700;">Archive: Finished Bags</span>
+                <span id="archiveCountTag" class="badge">0</span>
               </div>
-              <div class="p-1 text-zinc-400 transition-transform group-open:rotate-180">
-                <i data-lucide="chevron-down" class="w-4 h-4"></i>
-              </div>
+              <span style="color:var(--text-muted);">▼</span>
             </summary>
-
-            <div id="finishedBeansList" class="mt-3 pt-3 border-t border-surface-borderSubtle space-y-2 font-mono">
-              <!-- Rendered via JS -->
-            </div>
+            <div id="archivedBeansList" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-subtle);"></div>
           </details>
         </div>
 
-        <!-- Tools & Equipment Accordion -->
-        <div class="bg-surface-card rounded-2xl border border-surface-border overflow-hidden">
-          <details class="group p-4">
-            <summary class="flex items-center justify-between cursor-pointer list-none select-none font-mono">
-              <div class="space-y-0.5">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-white uppercase text-xs tracking-wider">Tools & Equipment</span>
-                  <span id="gearCountBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-surface-elevated text-zinc-400 border border-surface-borderSubtle">6 items</span>
-                </div>
-                <div class="text-[10px] text-zinc-500">Rarely changed • Tap to edit gear</div>
+        <!-- Tools & Equipment -->
+        <div class="card" style="padding:10px 14px;">
+          <details>
+            <summary style="font-family:var(--mono); font-size:11px; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-weight:700;">Tools & Equipment</span>
+                <span id="gearCountTag" class="badge">6</span>
               </div>
-              <div class="p-1 text-zinc-400 transition-transform group-open:rotate-180">
-                <i data-lucide="chevron-down" class="w-4 h-4"></i>
-              </div>
+              <span style="color:var(--text-muted);">▼</span>
             </summary>
-
-            <div class="mt-3 pt-3 border-t border-surface-borderSubtle space-y-3 font-mono">
-              <div class="flex items-center justify-end">
-                <button onclick="toggleGearForm()" id="toggleGearFormBtn" class="text-[11px] text-zinc-400 hover:text-white underline">
-                  + Add Gear
-                </button>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-subtle);">
+              <div style="text-align:right; margin-bottom:8px;">
+                <button type="button" class="btn-secondary" onclick="toggleAddGearForm()">+ Add Tool</button>
               </div>
 
               <!-- Add Gear Form -->
-              <form id="addGearForm" onsubmit="handleAddGearSubmit(event)" class="hidden bg-surface-elevated p-3 rounded-xl border border-surface-border space-y-2.5">
-                <input type="text" id="newGearName" placeholder="e.g. Fellow Ode Grinder" class="w-full bg-[#111] border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-zinc-400" required>
-                <div class="grid grid-cols-2 gap-2">
+              <form id="addGearForm" class="hidden" onsubmit="submitNewGear(event)" style="background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:10px;">
+                <div class="form-group">
+                  <label for="newGearName" class="form-label">Tool / Machine Name</label>
+                  <input type="text" id="newGearName" placeholder="e.g. Fellow Ode Grinder" required>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="form-group">
                   <div>
-                    <label class="text-[10px] text-zinc-400">Price (<span class="currency-label">KD</span>)</label>
-                    <input type="number" id="newGearPrice" placeholder="115.000" min="0" step="0.250" class="w-full bg-[#111] border border-surface-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-zinc-400" required>
+                    <label for="newGearPrice" class="form-label">Price (KD)</label>
+                    <input type="number" id="newGearPrice" step="0.250" placeholder="115.000" required>
                   </div>
                   <div>
-                    <label class="text-[10px] text-zinc-400">Assign Setup</label>
-                    <select id="newGearSetup" class="w-full bg-[#111] border border-surface-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-zinc-400">
-                      <option value="v60">V60 Setup</option>
-                      <option value="espresso">Espresso Setup</option>
-                      <option value="shared">Shared (50% / 50%)</option>
-                    </select>
+                    <label for="newGearSetup" class="form-label">Setup</label>
+                    <div class="select-wrap">
+                      <select id="newGearSetup">
+                        <option value="v60">V60</option>
+                        <option value="espresso">Espresso</option>
+                        <option value="shared">Shared 50/50</option>
+                      </select>
+                      <div class="select-arrow">▼</div>
+                    </div>
                   </div>
                 </div>
-                <div class="flex gap-2 pt-1">
-                  <button type="button" onclick="toggleGearForm()" class="flex-1 py-1.5 rounded-lg bg-surface-card text-zinc-400 hover:text-white border border-surface-border text-[11px]">Cancel</button>
-                  <button type="submit" class="flex-1 py-1.5 rounded-lg bg-white text-black font-semibold text-[11px]">Save Gear</button>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" class="btn-secondary" onclick="toggleAddGearForm()" style="flex:1;">Cancel</button>
+                  <button type="submit" class="btn-main" style="flex:1; padding:8px; font-size:11px;">Save Tool</button>
                 </div>
               </form>
 
-              <!-- Gear List -->
-              <div id="drawerGearList" class="space-y-1.5"></div>
+              <div id="equipmentList"></div>
             </div>
           </details>
         </div>
 
-        <!-- Benchmarks Accordion -->
-        <div class="bg-surface-card rounded-2xl border border-surface-border p-4 space-y-3 font-mono">
-          <span class="font-bold text-white uppercase text-xs tracking-wider block">Cafe Benchmark Prices</span>
-          <div class="grid grid-cols-2 gap-2 text-[11px]">
-            <div class="bg-surface-elevated p-2 rounded-xl border border-surface-border">
-              <span class="text-zinc-400 block text-[10px]">V60 / Moka</span>
-              <input type="number" step="0.050" id="benchInputV60" onchange="saveBenchmarks()" class="w-full mt-1 bg-black border border-surface-border rounded px-2 py-1 text-white font-mono outline-none focus:border-zinc-400">
+        <!-- Baseline Prices -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-weight:700; font-size:12px;">Cafe Benchmark Prices</span>
+            <button type="button" class="btn-secondary" onclick="saveBenchmarkPrices()" style="background:#fff; color:#000; font-weight:700;">Save Prices</button>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label for="bmV60" class="form-label">V60 / Pour</label>
+              <input type="number" step="0.050" id="bmV60">
             </div>
-            <div class="bg-surface-elevated p-2 rounded-xl border border-surface-border">
-              <span class="text-zinc-400 block text-[10px]">Espresso</span>
-              <input type="number" step="0.050" id="benchInputEspresso" onchange="saveBenchmarks()" class="w-full mt-1 bg-black border border-surface-border rounded px-2 py-1 text-white font-mono outline-none focus:border-zinc-400">
+            <div>
+              <label for="bmEspresso" class="form-label">Espresso</label>
+              <input type="number" step="0.050" id="bmEspresso">
             </div>
-            <div class="bg-surface-elevated p-2 rounded-xl border border-surface-border">
-              <span class="text-zinc-400 block text-[10px]">Latte / Flat White</span>
-              <input type="number" step="0.050" id="benchInputMilk" onchange="saveBenchmarks()" class="w-full mt-1 bg-black border border-surface-border rounded px-2 py-1 text-white font-mono outline-none focus:border-zinc-400">
+            <div>
+              <label for="bmMilk" class="form-label">Flat White / Latte</label>
+              <input type="number" step="0.050" id="bmMilk">
             </div>
-            <div class="bg-surface-elevated p-2 rounded-xl border border-surface-border">
-              <span class="text-zinc-400 block text-[10px]">Cortado</span>
-              <input type="number" step="0.050" id="benchInputCortado" onchange="saveBenchmarks()" class="w-full mt-1 bg-black border border-surface-border rounded px-2 py-1 text-white font-mono outline-none focus:border-zinc-400">
+            <div>
+              <label for="bmCortado" class="form-label">Cortado</label>
+              <input type="number" step="0.050" id="bmCortado">
             </div>
           </div>
-          <div class="flex items-center justify-between pt-1">
-            <span class="text-zinc-400 text-[11px]">Currency:</span>
-            <input type="text" id="settingCurrency" maxlength="4" value="KD" onchange="saveBenchmarks()" class="w-16 bg-surface-elevated border border-surface-border rounded-lg px-2 py-1 text-center text-white font-mono outline-none focus:border-zinc-400 uppercase">
-          </div>
+        </div>
+
+        <!-- Emergency Factory Reset -->
+        <div style="margin-top:16px;">
+          <button type="button" onclick="promptFactoryReset()" style="width:100%; background:var(--red-dark); border:1px solid #7f1d1d; color:#fca5a5; padding:10px; border-radius:10px; font-family:var(--mono); font-size:11px; cursor:pointer;">
+            ⚠️ Reset All Data to Clean Defaults
+          </button>
         </div>
 
       </section>
 
     </main>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-full max-w-xs flex flex-col items-center gap-2"></div>
-
     <!-- EXPORT MODAL -->
-    <div id="exportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-      <div class="bg-surface-card border border-surface-border rounded-2xl w-full max-w-sm p-4 space-y-3 font-mono shadow-2xl">
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wider text-white font-bold">Export Coffee Log</span>
-          <button onclick="closeExportModal()" class="text-zinc-500 hover:text-white p-1">
-            <i data-lucide="x" class="w-4 h-4"></i>
-          </button>
+    <div id="exportModal" class="modal-overlay">
+      <div class="modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span style="font-weight:700; font-size:12px;">Export Coffee Logs</span>
+          <button type="button" onclick="closeExportModal()" style="background:none; border:none; color:#aaa; font-size:16px; cursor:pointer;">✕</button>
         </div>
 
-        <div class="grid grid-cols-3 gap-1 text-[11px]">
-          <button id="expBtnAll" onclick="setExportFilter('all')" class="py-1.5 rounded-lg bg-white text-black font-semibold text-center">All Time</button>
-          <button id="expBtnMonth" onclick="setExportFilter('month')" class="py-1.5 rounded-lg bg-surface-elevated text-zinc-400 border border-surface-border text-center hover:text-white">Last 30d</button>
-          <button id="expBtnCustom" onclick="setExportFilter('custom')" class="py-1.5 rounded-lg bg-surface-elevated text-zinc-400 border border-surface-border text-center hover:text-white">Custom</button>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin-bottom:10px;">
+          <button type="button" id="expFilterAll" class="chip-btn active" onclick="setExportFilter('all')">All Time</button>
+          <button type="button" id="expFilterMonth" class="chip-btn" onclick="setExportFilter('month')">30 Days</button>
+          <button type="button" id="expFilterCustom" class="chip-btn" onclick="setExportFilter('custom')">Custom</button>
         </div>
 
-        <div id="customExportDates" class="hidden grid grid-cols-2 gap-2 text-[10px]">
+        <div id="exportDateRange" class="hidden" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px;">
           <div>
-            <span class="text-zinc-500">From</span>
-            <input type="date" id="exportFromDate" onchange="buildExportText()" class="w-full bg-[#111] border border-surface-border rounded px-2 py-1 text-white">
+            <label for="expStartDate" class="form-label">From</label>
+            <input type="date" id="expStartDate" onchange="generateExportSummary()">
           </div>
           <div>
-            <span class="text-zinc-500">To</span>
-            <input type="date" id="exportToDate" onchange="buildExportText()" class="w-full bg-[#111] border border-surface-border rounded px-2 py-1 text-white">
+            <label for="expEndDate" class="form-label">To</label>
+            <input type="date" id="expEndDate" onchange="generateExportSummary()">
           </div>
         </div>
 
-        <textarea id="exportPreviewArea" readonly rows="6" class="w-full bg-[#0a0a0a] border border-surface-border rounded-xl p-2.5 text-[10px] text-zinc-300 font-mono outline-none resize-none leading-relaxed"></textarea>
+        <textarea id="exportTextOutput" rows="7" readonly style="margin-bottom:10px; font-size:10px; resize:none;"></textarea>
 
-        <button onclick="executeClipboardCopy()" class="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition">
-          <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
-          <span>Copy to Clipboard</span>
+        <button type="button" class="btn-main" onclick="copyExportToClipboard()">
+          📋 Copy to Clipboard
         </button>
       </div>
     </div>
 
     <!-- MINIMAL CONFIRM DIALOG -->
-    <div id="minimalConfirmDialog" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-      <div class="bg-surface-card border border-surface-border rounded-2xl w-full max-w-xs p-4 space-y-3 font-mono shadow-2xl text-center">
-        <h3 id="confirmDialogTitle" class="text-xs font-bold text-white uppercase tracking-wider">Are you sure?</h3>
-        <p id="confirmDialogMsg" class="text-[11px] text-zinc-400"></p>
-        <div class="flex gap-2 pt-1">
-          <button id="confirmCancelBtn" class="flex-1 py-1.5 rounded-lg bg-surface-elevated border border-surface-border text-zinc-300 text-xs">Cancel</button>
-          <button id="confirmOkBtn" class="flex-1 py-1.5 rounded-lg bg-white text-black font-bold text-xs">OK</button>
+    <div id="confirmModal" class="modal-overlay">
+      <div class="modal-card" style="text-align:center;">
+        <h3 id="confirmTitle" style="font-size:13px; font-weight:800; margin-bottom:6px;">Are you sure?</h3>
+        <p id="confirmMessage" style="font-size:11px; color:var(--text-muted); margin-bottom:14px;"></p>
+        <div style="display:flex; gap:8px;">
+          <button type="button" id="confirmCancelBtn" class="btn-secondary" style="flex:1;">Cancel</button>
+          <button type="button" id="confirmOkBtn" class="btn-main" style="flex:1; padding:8px;">Confirm</button>
         </div>
       </div>
     </div>
 
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toastContainer"></div>
+
   </div>
 
-  <!-- APPLICATION LOGIC & DATA PERSISTENCE -->
   <script>
-    const STORAGE_KEY = "brewlog_roi_data_v2";
+    const STORAGE_KEY = "brewlog_roi_data_v4";
 
-    // Default Application State
-    let APP = {
-      activeTab: 'brew',
-      activeMode: 'v60',
+    // Resilient local storage with memory fallback for strict Android WebViews
+    const StorageHandler = {
+      mem: {},
+      get(k) {
+        try {
+          if (window.localStorage) {
+            const val = window.localStorage.getItem(k);
+            if (val) return val;
+          }
+        } catch (e) {
+          console.warn("Storage read error, using RAM", e);
+        }
+        return this.mem[k] || null;
+      },
+      set(k, v) {
+        this.mem[k] = v;
+        try {
+          if (window.localStorage) {
+            window.localStorage.setItem(k, v);
+          }
+        } catch (e) {
+          console.warn("Storage write error, using RAM", e);
+        }
+      }
+    };
+
+    const DEFAULT_DATA = {
+      activeTab: "brew",
+      activeMode: "v60",
       currency: "KD",
       benchmarks: {
         "V60": 2.000,
@@ -513,8 +799,8 @@
       equipment: [
         { id: "eq-1", name: "Fellow Ode Gen 2 Grinder", price: 115.000, setup: "v60" },
         { id: "eq-2", name: "Hario V60 Switch + Glass Server", price: 18.500, setup: "v60" },
-        { id: "eq-3", name: "Timemore Scale", price: 16.000, setup: "shared" },
-        { id: "eq-4", name: "Breville Bambino Plus Espresso Machine", price: 155.000, setup: "espresso" },
+        { id: "eq-3", name: "Timemore Black Mirror Scale", price: 16.000, setup: "shared" },
+        { id: "eq-4", name: "Breville Bambino Plus Espresso", price: 155.000, setup: "espresso" },
         { id: "eq-5", name: "DF64 Gen 2 Grinder", price: 125.000, setup: "espresso" },
         { id: "eq-6", name: "Normcore 54mm Portafilter & Tamper", price: 24.000, setup: "espresso" }
       ],
@@ -524,7 +810,7 @@
           name: "Earth Roastery - Ethiopia Yirgacheffe",
           bagWeight: 250,
           bagPrice: 5.500,
-          remainingGrams: 184,
+          remainingGrams: 232,
           finished: false
         },
         {
@@ -532,7 +818,7 @@
           name: "Volcan Roasters - Colombia Pink Bourbon",
           bagWeight: 250,
           bagPrice: 7.250,
-          remainingGrams: 232,
+          remainingGrams: 250,
           finished: false
         }
       ],
@@ -548,923 +834,728 @@
           cupCost: 0.396,
           benchmark: 2.000,
           savings: 1.604,
-          timestamp: Date.now() - (1000 * 60 * 60 * 2)
+          timestamp: Date.now() - 7200000
         }
       ],
-      currentDrink: "V60",
       currentDose: 18,
       exportFilter: "all"
     };
 
-    // Load from LocalStorage
-    function loadState() {
+    let APP = JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+    function loadAppState() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          APP = { ...APP, ...parsed };
+        const raw = StorageHandler.get(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          APP = Object.assign({}, DEFAULT_DATA, parsed);
+          if (!Array.isArray(APP.beans) || APP.beans.length === 0) {
+            APP.beans = JSON.parse(JSON.stringify(DEFAULT_DATA.beans));
+          }
+          if (!Array.isArray(APP.equipment)) {
+            APP.equipment = JSON.parse(JSON.stringify(DEFAULT_DATA.equipment));
+          }
+          if (!Array.isArray(APP.brews)) {
+            APP.brews = [];
+          }
         }
-      } catch (e) {
-        console.warn("Could not parse saved data", e);
+      } catch (err) {
+        console.error("State load failed, falling back to defaults", err);
+        APP = JSON.parse(JSON.stringify(DEFAULT_DATA));
       }
     }
 
-    // Save to LocalStorage
-    function saveState() {
+    function saveAppState() {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(APP));
-      } catch (e) {
-        console.error("Failed to save state", e);
+        StorageHandler.set(STORAGE_KEY, JSON.stringify(APP));
+      } catch (err) {
+        console.error("State save failed", err);
       }
     }
 
     function fmt(val, decimals = 3) {
-      return Number(val || 0).toFixed(decimals);
+      const n = Number(val);
+      return isNaN(n) ? "0.000" : n.toFixed(decimals);
     }
 
-    function fmtWithCurr(val, decimals = 3) {
-      return fmt(val, decimals) + " " + APP.currency;
+    function fmtCurrency(val) {
+      return fmt(val, 3) + " " + (APP.currency || "KD");
     }
 
-    function haptic(ms = 12) {
-      if (window.navigator && window.navigator.vibrate) {
-        try { window.navigator.vibrate(ms); } catch (e) {}
+    function triggerHaptic(duration = 15) {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        try { navigator.vibrate(duration); } catch (e) {}
       }
     }
 
-    /* -------------------------------------------------------------
-       Tab Navigation System
-       ------------------------------------------------------------- */
     function switchNavTab(tab) {
-      haptic(15);
+      triggerHaptic(12);
       APP.activeTab = tab;
-      
+
       const tabs = ['brew', 'roi', 'history', 'pantry'];
       tabs.forEach(t => {
-        const btn = document.getElementById('navTab' + t.charAt(0).toUpperCase() + t.slice(1));
-        const view = document.getElementById('viewTab' + t.charAt(0).toUpperCase() + t.slice(1));
-
-        if (t === tab) {
-          btn.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 bg-white text-black shadow-sm";
-          view.classList.remove('hidden');
-        } else {
-          btn.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1 text-zinc-400 hover:text-white";
-          view.classList.add('hidden');
+        const btn = document.getElementById('tabNav' + t.charAt(0).toUpperCase() + t.slice(1));
+        const view = document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (btn && view) {
+          if (t === tab) {
+            btn.classList.add('active');
+            view.classList.remove('hidden');
+          } else {
+            btn.classList.remove('active');
+            view.classList.add('hidden');
+          }
         }
       });
 
-      if (tab === 'roi') renderHero();
-      if (tab === 'history') renderFeed();
-      if (tab === 'pantry') renderPantryData();
-      if (tab === 'brew') renderQuickLogger();
-
-      refreshIcons();
+      if (tab === 'brew') renderBrewLogger();
+      if (tab === 'roi') renderRoiDashboard();
+      if (tab === 'history') renderHistoryFeed();
+      if (tab === 'pantry') renderPantryView();
     }
 
-    function computeAnalytics() {
-      const mode = APP.activeMode;
-      const gearCost = APP.equipment.reduce((sum, item) => {
-        const itemSetup = item.setup || 'v60';
-        if (itemSetup === mode) return sum + Number(item.price || 0);
-        if (itemSetup === 'shared') return sum + (Number(item.price || 0) * 0.5);
-        return sum;
-      }, 0);
-
-      const relevantBrews = APP.brews.filter(b => {
-        if (b.setup) return b.setup === mode;
-        return mode === 'v60' ? (b.drink.includes('V60') || b.drink.includes('Moka') || b.drink.includes('Switch')) : !b.drink.includes('V60');
-      });
-
-      let totalSpentOnBeans = 0;
-      let totalSaved = 0;
-
-      relevantBrews.forEach(b => {
-        totalSpentOnBeans += b.cupCost;
-        totalSaved += b.savings;
-      });
-
-      const totalCups = relevantBrews.length;
-      const avgCostPerCup = totalCups > 0 ? (totalSpentOnBeans / totalCups) : 0;
-      const remainingCost = Math.max(0, gearCost - totalSaved);
-      const isProfitable = totalSaved >= gearCost && gearCost > 0;
-      const netProfit = Math.max(0, totalSaved - gearCost);
-      const progressPct = gearCost > 0 ? Math.min(100, (totalSaved / gearCost) * 100) : (totalSaved > 0 ? 100 : 0);
-
-      return {
-        gearCost,
-        totalSpentOnBeans,
-        totalSaved,
-        totalCups,
-        avgCostPerCup,
-        remainingCost,
-        isProfitable,
-        netProfit,
-        progressPct
-      };
-    }
-
-    function switchMode(mode) {
-      haptic(15);
-      APP.activeMode = mode;
-      
-      const btnV60 = document.getElementById('tabBtnV60');
-      const btnEsp = document.getElementById('tabBtnEspresso');
-
-      if (mode === 'v60') {
-        btnV60.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 bg-white text-black shadow-sm";
-        btnEsp.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white";
-      } else {
-        btnEsp.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 bg-white text-black shadow-sm";
-        btnV60.className = "py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white";
-      }
-
-      saveState();
-      renderHero();
-    }
-
-    function renderHero() {
-      const a = computeAnalytics();
-      const heroStatusLabel = document.getElementById('heroStatusLabel');
-      const heroMainAmount = document.getElementById('heroMainAmount');
-      const heroProgressBar = document.getElementById('heroProgressBar');
-      const heroPercentBadge = document.getElementById('heroPercentBadge');
-      const heroModePill = document.getElementById('heroModePill');
-
-      heroModePill.textContent = APP.activeMode === 'v60' ? "V60" : "ESPRESSO";
-      document.getElementById('statCupsCount').textContent = a.totalCups;
-      document.getElementById('statTotalSaved').textContent = (a.totalSaved >= 0 ? "+" : "") + fmtWithCurr(a.totalSaved);
-      document.getElementById('statGearTotal').textContent = fmtWithCurr(a.gearCost);
-      document.getElementById('heroCurrencyBadge').textContent = APP.currency;
-
-      heroPercentBadge.textContent = `${Math.round(a.progressPct)}% Amortized`;
-      heroProgressBar.style.width = `${a.progressPct}%`;
-
-      if (a.isProfitable) {
-        heroStatusLabel.innerHTML = `<span class="px-1.5 py-0.5 rounded bg-emerald-950 text-[10px] text-emerald-400 font-semibold border border-emerald-800">${APP.activeMode.toUpperCase()}</span> <span class="text-emerald-400 font-bold">Net Profit</span>`;
-        heroMainAmount.textContent = "+" + fmt(a.netProfit);
-        heroMainAmount.className = "text-3xl sm:text-4xl font-black tracking-tight text-emerald-400 mono-num";
-        heroProgressBar.className = "h-full bg-emerald-500 transition-all duration-500";
-      } else {
-        heroStatusLabel.innerHTML = `<span class="px-1.5 py-0.5 rounded bg-surface-elevated text-[10px] text-zinc-300 font-semibold border border-surface-borderSubtle">${APP.activeMode.toUpperCase()}</span> <span class="text-zinc-400">Break-Even</span>`;
-        heroMainAmount.textContent = fmt(a.remainingCost);
-        heroMainAmount.className = "text-3xl sm:text-4xl font-black tracking-tight text-white mono-num";
-        heroProgressBar.className = "h-full bg-white transition-all duration-500";
-      }
-    }
-
-    /* -------------------------------------------------------------
-       Quick Logger & Synchronized Slider / Dropdown Handling
-       ------------------------------------------------------------- */
-    function renderQuickLogger() {
-      const beanSelect = document.getElementById('quickBeanSelect');
-      const warningEl = document.getElementById('noActiveBeansWarning');
-      const logBtn = document.getElementById('inlineLogBtn');
-
-      const activeBeans = APP.beans.filter(b => !b.finished);
+    function renderBrewLogger() {
+      const beanSelect = document.getElementById('beanSelect');
+      const noBeansAlert = document.getElementById('noBeansAlert');
+      const activeBeans = (APP.beans || []).filter(b => !b.finished);
 
       if (activeBeans.length === 0) {
-        beanSelect.innerHTML = `<option value="">(No active bags - all finished)</option>`;
-        beanSelect.disabled = true;
-        warningEl.classList.remove('hidden');
-        logBtn.disabled = true;
-        logBtn.classList.add('opacity-50');
+        beanSelect.innerHTML = `<option value="">(No active bags available)</option>`;
+        noBeansAlert.classList.remove('hidden');
       } else {
-        beanSelect.disabled = false;
-        warningEl.classList.add('hidden');
-        logBtn.disabled = false;
-        logBtn.classList.remove('opacity-50');
-
-        const currentSelected = beanSelect.value;
+        noBeansAlert.classList.add('hidden');
+        const curr = beanSelect.value;
         beanSelect.innerHTML = activeBeans.map(b => {
-          const costPerG = b.bagWeight > 0 ? (b.bagPrice / b.bagWeight) : 0;
-          return `<option value="${b.id}">${b.name} (${b.remainingGrams}g left • ${fmt(costPerG, 3)} ${APP.currency}/g)</option>`;
+          const cpg = b.bagWeight > 0 ? (b.bagPrice / b.bagWeight) : 0;
+          return `<option value="${b.id}">${b.name} (${b.remainingGrams}g left • ${fmt(cpg, 3)} KD/g)</option>`;
         }).join('');
 
-        if (currentSelected && activeBeans.some(b => b.id === currentSelected)) {
-          beanSelect.value = currentSelected;
+        if (curr && activeBeans.some(b => b.id === curr)) {
+          beanSelect.value = curr;
+        } else {
+          beanSelect.value = activeBeans[0].id;
         }
       }
 
-      updateInlineCalculations();
+      updateCalculationPreview();
     }
 
-    function handleDrinkSelectChange() {
-      haptic(10);
-      const drinkSelect = document.getElementById('quickDrinkSelect');
-      const selectedOpt = drinkSelect.options[drinkSelect.selectedIndex];
-      const drink = drinkSelect.value;
-      const setup = selectedOpt.getAttribute('data-setup') || 'v60';
-
-      APP.currentDrink = drink;
-      document.getElementById('drinkSetupBadge').textContent = setup === 'espresso' ? "Espresso Bar Setup" : "V60 Filter Setup";
-
-      updateInlineCalculations();
+    function handleDrinkChange() {
+      triggerHaptic(10);
+      const drinkSelect = document.getElementById('drinkSelect');
+      const opt = drinkSelect.options[drinkSelect.selectedIndex];
+      const setup = opt ? opt.getAttribute('data-setup') : 'v60';
+      document.getElementById('drinkSetupBadge').textContent = (setup === 'espresso' ? "Espresso Bar Setup" : "V60 Filter Setup");
+      updateCalculationPreview();
     }
 
-    function handleBeanSelectChange() {
-      haptic(8);
-      updateInlineCalculations();
+    function handleBeanChange() {
+      triggerHaptic(10);
+      updateCalculationPreview();
     }
 
     function handleDoseSlider(val) {
       APP.currentDose = parseFloat(val);
-      document.getElementById('customDoseInput').value = val;
-      updateDoseChipStyles(val);
-      updateInlineCalculations();
+      document.getElementById('doseNumberInput').value = val;
+      updatePresetChips(val);
+      updateCalculationPreview();
     }
 
     function handleDoseInput(val) {
-      const parsed = parseFloat(val);
-      if (!isNaN(parsed) && parsed > 0) {
-        APP.currentDose = parsed;
+      const n = parseFloat(val);
+      if (!isNaN(n) && n > 0) {
+        APP.currentDose = n;
         const slider = document.getElementById('doseSlider');
-        if (parsed >= slider.min && parsed <= slider.max) {
-          slider.value = parsed;
+        if (slider && n >= parseFloat(slider.min) && n <= parseFloat(slider.max)) {
+          slider.value = n;
         }
-        updateDoseChipStyles(parsed);
-        updateInlineCalculations();
+        updatePresetChips(n);
+        updateCalculationPreview();
       }
     }
 
-    function setQuickDose(val) {
-      haptic(10);
-      APP.currentDose = val;
-      document.getElementById('customDoseInput').value = val;
-      document.getElementById('doseSlider').value = val;
-      updateDoseChipStyles(val);
-      updateInlineCalculations();
+    function setPresetDose(grams) {
+      triggerHaptic(12);
+      APP.currentDose = grams;
+      document.getElementById('doseSlider').value = grams;
+      document.getElementById('doseNumberInput').value = grams;
+      updatePresetChips(grams);
+      updateCalculationPreview();
     }
 
-    function updateDoseChipStyles(val) {
-      document.querySelectorAll('.dose-chip').forEach(btn => {
-        if (parseFloat(btn.textContent) === parseFloat(val)) {
-          btn.className = "dose-chip flex-1 py-1 rounded-lg bg-white text-black font-bold text-center text-[11px] transition shadow-sm";
+    function updatePresetChips(grams) {
+      document.querySelectorAll('.chip-grid .chip-btn').forEach(btn => {
+        if (parseFloat(btn.textContent) === parseFloat(grams)) {
+          btn.classList.add('active');
         } else {
-          btn.className = "dose-chip flex-1 py-1 rounded-lg bg-surface-elevated text-zinc-400 hover:text-white border border-surface-border text-center text-[11px] transition";
+          btn.classList.remove('active');
         }
       });
     }
 
-    function updateInlineCalculations() {
-      const beanSelect = document.getElementById('quickBeanSelect');
-      const beanId = beanSelect.value;
-      const bean = APP.beans.find(b => b.id === beanId);
+    function updateCalculationPreview() {
+      const beanSelect = document.getElementById('beanSelect');
+      const bean = (APP.beans || []).find(b => b.id === beanSelect.value);
+      const drinkSelect = document.getElementById('drinkSelect');
+      const drink = drinkSelect.value;
       const dose = APP.currentDose || 18;
-      const drink = APP.currentDrink || "V60";
-      const benchmark = APP.benchmarks[drink] || 2.000;
+      const benchmark = (APP.benchmarks && APP.benchmarks[drink]) ? APP.benchmarks[drink] : 2.000;
 
-      let costPerG = 0;
+      let cupCost = 0;
       if (bean && bean.bagWeight > 0) {
-        costPerG = bean.bagPrice / bean.bagWeight;
+        const cpg = Number(bean.bagPrice) / Number(bean.bagWeight);
+        cupCost = dose * cpg;
       }
-
-      const cupCost = dose * costPerG;
       const savings = benchmark - cupCost;
 
-      document.getElementById('inlinePreviewCost').textContent = fmtWithCurr(cupCost);
-      document.getElementById('inlinePreviewSavings').textContent = (savings >= 0 ? "+" : "") + fmtWithCurr(savings);
-      document.getElementById('inlineLogSavingsBadge').textContent = `(+${fmtWithCurr(savings)})`;
+      document.getElementById('liveCupCost').textContent = fmtCurrency(cupCost);
+      document.getElementById('liveCupSavings').textContent = (savings >= 0 ? "+" : "") + fmtCurrency(savings);
+      document.getElementById('logCupSavingsTag').textContent = `(+${fmtCurrency(savings)})`;
     }
 
-    function logBrewNow() {
-      haptic(20);
-      const activeBeans = APP.beans.filter(b => !b.finished);
+    function logCupNow() {
+      triggerHaptic(20);
+      const activeBeans = (APP.beans || []).filter(b => !b.finished);
+
       if (activeBeans.length === 0) {
-        showMinimalConfirm("All Beans Finished", "Please add a new bean bag or reactivate one in the Pantry tab.", () => {
-          switchNavTab('pantry');
-        }, true);
+        openConfirmDialog("All Bags Finished", "Would you like to reactivate your previous bean bags now?", () => {
+          (APP.beans || []).forEach(b => b.finished = false);
+          saveAppState();
+          renderBrewLogger();
+          renderPantryView();
+          displayToast("Beans reactivated!");
+        });
         return;
       }
 
-      const beanSelect = document.getElementById('quickBeanSelect');
-      const beanId = beanSelect.value;
-      const bean = APP.beans.find(b => b.id === beanId);
-      if (!bean) return;
+      const beanSelect = document.getElementById('beanSelect');
+      let bean = activeBeans.find(b => b.id === beanSelect.value);
+      if (!bean) bean = activeBeans[0];
 
-      const drinkSelect = document.getElementById('quickDrinkSelect');
-      const selectedOpt = drinkSelect.options[drinkSelect.selectedIndex];
+      const drinkSelect = document.getElementById('drinkSelect');
+      const opt = drinkSelect.options[drinkSelect.selectedIndex];
       const drink = drinkSelect.value;
-      const setup = selectedOpt.getAttribute('data-setup') || 'v60';
+      const setup = opt ? opt.getAttribute('data-setup') : 'v60';
       const dose = APP.currentDose || 18;
-      const benchmark = APP.benchmarks[drink] || 2.000;
-      const costPerG = bean.bagWeight > 0 ? (bean.bagPrice / bean.bagWeight) : 0;
-      const cupCost = dose * costPerG;
+      const benchmark = (APP.benchmarks && APP.benchmarks[drink]) ? APP.benchmarks[drink] : 2.000;
+      const cpg = bean.bagWeight > 0 ? (Number(bean.bagPrice) / Number(bean.bagWeight)) : 0;
+      const cupCost = dose * cpg;
       const savings = benchmark - cupCost;
 
-      // Deduct bean inventory
-      bean.remainingGrams = Math.max(0, bean.remainingGrams - dose);
+      // Deduct inventory
+      bean.remainingGrams = Math.max(0, Number(bean.remainingGrams || 0) - dose);
 
-      const newBrew = {
+      const brewEntry = {
         id: "brew-" + Date.now(),
         setup,
         drink,
         beanId: bean.id,
         beanName: bean.name,
         dose,
-        costPerG,
+        costPerG: cpg,
         cupCost,
         benchmark,
         savings,
         timestamp: Date.now()
       };
 
-      APP.brews.unshift(newBrew);
-      saveState();
+      if (!Array.isArray(APP.brews)) APP.brews = [];
+      APP.brews.unshift(brewEntry);
+      saveAppState();
 
-      renderQuickLogger();
-      renderHero();
-      renderFeed();
-      renderPantryData();
-      showToast(`Logged ${drink} (${dose}g) • Saved +${fmtWithCurr(savings)}`);
+      renderBrewLogger();
+      renderRoiDashboard();
+      renderHistoryFeed();
+      renderPantryView();
+      displayToast(`Logged ${drink} (${dose}g) • Saved +${fmtCurrency(savings)}`);
     }
 
-    /* -------------------------------------------------------------
-       Beans & Pantry: "Bag Finished" (Archive) System
-       ------------------------------------------------------------- */
-    function markBeanFinished(id) {
-      haptic(15);
-      const bean = APP.beans.find(b => b.id === id);
-      if (!bean) return;
-
-      showMinimalConfirm("Mark Bag as Finished?", `Archive "${bean.name}"? It will be hidden from the daily brew logger while retaining past brew logs.`, () => {
-        bean.finished = true;
-        saveState();
-        renderPantryData();
-        renderQuickLogger();
-        showToast(`Archived "${bean.name}"`);
-      });
+    function switchSetupMode(mode) {
+      triggerHaptic(12);
+      APP.activeMode = mode;
+      document.getElementById('btnModeV60').className = (mode === 'v60' ? "tab-btn active" : "tab-btn");
+      document.getElementById('btnModeEspresso').className = (mode === 'espresso' ? "tab-btn active" : "tab-btn");
+      saveAppState();
+      renderRoiDashboard();
     }
 
-    function reactivateBean(id) {
-      haptic(15);
-      const bean = APP.beans.find(b => b.id === id);
-      if (!bean) return;
+    function calculateRoiData() {
+      const mode = APP.activeMode || 'v60';
+      const gearCost = (APP.equipment || []).reduce((sum, item) => {
+        if (item.setup === mode) return sum + Number(item.price || 0);
+        if (item.setup === 'shared') return sum + (Number(item.price || 0) * 0.5);
+        return sum;
+      }, 0);
 
-      bean.finished = false;
-      saveState();
-      renderPantryData();
-      renderQuickLogger();
-      showToast(`Reactivated "${bean.name}" to in-stock!`);
+      const relevantBrews = (APP.brews || []).filter(b => (b.setup ? b.setup === mode : true));
+      let totalSaved = 0;
+      relevantBrews.forEach(b => totalSaved += Number(b.savings || 0));
+
+      const isProfitable = totalSaved >= gearCost && gearCost > 0;
+      const remaining = Math.max(0, gearCost - totalSaved);
+      const netProfit = Math.max(0, totalSaved - gearCost);
+      const progress = gearCost > 0 ? Math.min(100, (totalSaved / gearCost) * 100) : (totalSaved > 0 ? 100 : 0);
+
+      return { gearCost, totalSaved, totalCups: relevantBrews.length, isProfitable, remaining, netProfit, progress };
     }
 
-    function renderPantryData() {
-      // Sync Baselines
-      document.getElementById('benchInputV60').value = APP.benchmarks["V60"] || 2.000;
-      document.getElementById('benchInputEspresso').value = APP.benchmarks["Espresso"] || 1.250;
-      document.getElementById('benchInputMilk').value = APP.benchmarks["Flat White"] || 1.750;
-      document.getElementById('benchInputCortado').value = APP.benchmarks["Cortado"] || 1.500;
-      document.getElementById('settingCurrency').value = APP.currency || "KD";
+    function renderRoiDashboard() {
+      const data = calculateRoiData();
+      const setupTag = document.getElementById('heroSetupTag');
+      const balanceNum = document.getElementById('heroBalanceNumber');
+      const progressBar = document.getElementById('heroProgressBar');
 
-      document.querySelectorAll('.currency-label').forEach(el => el.textContent = APP.currency);
+      setupTag.textContent = (APP.activeMode === 'v60' ? "V60 FILTER SETUP" : "ESPRESSO SETUP");
+      document.getElementById('statCups').textContent = data.totalCups;
+      document.getElementById('statSaved').textContent = "+" + fmtCurrency(data.totalSaved);
+      document.getElementById('statGear').textContent = fmtCurrency(data.gearCost);
+      document.getElementById('heroPercentTag').textContent = `${Math.round(data.progress)}% Amortized`;
+      progressBar.style.width = `${data.progress}%`;
 
-      const activeBeans = APP.beans.filter(b => !b.finished);
-      const finishedBeans = APP.beans.filter(b => b.finished);
-
-      document.getElementById('finishedBagsCountBadge').textContent = `${finishedBeans.length} bags`;
-
-      // Render Active Beans
-      const activeBeansListEl = document.getElementById('drawerBeansList');
-      if (activeBeans.length === 0) {
-        activeBeansListEl.innerHTML = `<div class="p-3 bg-surface-elevated rounded-xl border border-surface-borderSubtle text-zinc-500 text-center text-xs">No active coffee bags in pantry.</div>`;
+      if (data.isProfitable) {
+        setupTag.style.background = "var(--emerald-dark)";
+        setupTag.style.color = "var(--emerald)";
+        balanceNum.textContent = "+" + fmt(data.netProfit);
+        balanceNum.style.color = "var(--emerald)";
+        progressBar.style.background = "var(--emerald)";
       } else {
-        activeBeansListEl.innerHTML = activeBeans.map(bean => {
-          const costG = bean.bagWeight > 0 ? (bean.bagPrice / bean.bagWeight) : 0;
-          return `
-            <div class="p-3 rounded-xl bg-surface-elevated border border-surface-border text-xs space-y-2">
-              <div class="flex items-start justify-between gap-2">
-                <div class="truncate">
-                  <div class="font-bold text-white truncate">${bean.name}</div>
-                  <div class="text-[10px] text-zinc-400 mt-0.5">
-                    ${bean.remainingGrams}g left of ${bean.bagWeight}g • ${fmt(costG, 3)} ${APP.currency}/g
-                  </div>
-                </div>
-                <button onclick="deleteBean('${bean.id}')" class="text-zinc-500 hover:text-red-400 p-1 shrink-0" title="Delete bean">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between pt-1 border-t border-surface-borderSubtle gap-2">
-                <button onclick="promptEditBeanRemaining('${bean.id}')" class="px-2 py-1 rounded bg-black text-zinc-300 text-[10px] border border-surface-borderSubtle hover:text-white">
-                  Reset ${bean.bagWeight}g
-                </button>
-                <button onclick="markBeanFinished('${bean.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 text-[10px] border border-emerald-800/80 font-bold flex items-center gap-1 active:scale-95 transition">
-                  <i data-lucide="check-circle" class="w-3 h-3"></i>
-                  <span>Bag Finished</span>
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
+        setupTag.style.background = "var(--elevated)";
+        setupTag.style.color = "#ccc";
+        balanceNum.textContent = fmt(data.remaining);
+        balanceNum.style.color = "#ffffff";
+        progressBar.style.background = "#ffffff";
       }
-
-      // Render Finished Beans in Archive
-      const finishedBeansListEl = document.getElementById('finishedBeansList');
-      if (finishedBeans.length === 0) {
-        finishedBeansListEl.innerHTML = `<div class="p-2 text-zinc-600 text-center text-[11px]">No archived bags.</div>`;
-      } else {
-        finishedBeansListEl.innerHTML = finishedBeans.map(bean => {
-          return `
-            <div class="flex items-center justify-between p-2.5 rounded-lg bg-[#0e0e0e] border border-surface-borderSubtle text-xs">
-              <div class="truncate max-w-[190px]">
-                <div class="text-zinc-400 line-through truncate">${bean.name}</div>
-                <div class="text-[9px] text-zinc-600">${bean.bagWeight}g bag • ${fmtWithCurr(bean.bagPrice)}</div>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <button onclick="reactivateBean('${bean.id}')" class="px-2 py-1 rounded bg-surface-elevated hover:bg-[#222] text-zinc-300 hover:text-white text-[10px] border border-surface-border flex items-center gap-1">
-                  <i data-lucide="rotate-ccw" class="w-3 h-3 text-emerald-400"></i>
-                  <span>Reactivate</span>
-                </button>
-                <button onclick="deleteBean('${bean.id}')" class="text-zinc-600 hover:text-red-400 p-1">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // Render Equipment
-      document.getElementById('gearCountBadge').textContent = `${APP.equipment.length} items`;
-      const gearListEl = document.getElementById('drawerGearList');
-      if (APP.equipment.length === 0) {
-        gearListEl.innerHTML = `<div class="p-2 text-zinc-500 text-center">No tools logged.</div>`;
-      } else {
-        gearListEl.innerHTML = APP.equipment.map(item => {
-          const badgeClass = item.setup === 'espresso'
-            ? 'bg-amber-950/60 text-amber-400 border-amber-800/60'
-            : (item.setup === 'shared' ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60');
-          const badgeText = item.setup === 'espresso' ? 'Espresso' : (item.setup === 'shared' ? 'Shared' : 'V60');
-
-          return `
-            <div class="flex items-center justify-between p-2 rounded-lg bg-surface-elevated border border-surface-border text-[11px]">
-              <div class="truncate max-w-[180px]">
-                <div class="text-white truncate">${item.name}</div>
-                <span class="inline-block mt-0.5 text-[9px] px-1 py-0.2 rounded border font-mono ${badgeClass}">${badgeText}</span>
-              </div>
-              <div class="flex items-center gap-2 font-mono">
-                <span class="text-zinc-300">${fmtWithCurr(item.price)}</span>
-                <button onclick="deleteGear('${item.id}')" class="text-zinc-500 hover:text-red-400 p-1">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      refreshIcons();
     }
 
-    function renderFeed() {
-      const listEl = document.getElementById('brewFeedList');
-      const emptyEl = document.getElementById('feedEmptyState');
-      const badgeEl = document.getElementById('feedCountBadge');
+    function renderHistoryFeed() {
+      const feedList = document.getElementById('feedList');
+      const emptyNotice = document.getElementById('feedEmptyNotice');
+      const countBadge = document.getElementById('historyCountBadge');
       const repeatLastBtn = document.getElementById('repeatLastBtn');
+      const brews = APP.brews || [];
 
-      badgeEl.textContent = `${APP.brews.length} brews total`;
+      countBadge.textContent = `${brews.length} brews`;
 
-      if (repeatLastBtn) {
-        if (APP.brews.length > 0) {
-          repeatLastBtn.classList.remove('hidden');
-          repeatLastBtn.title = `Duplicate last brew (${APP.brews[0].drink}, ${APP.brews[0].dose}g)`;
-        } else {
-          repeatLastBtn.classList.add('hidden');
-        }
+      if (brews.length > 0) {
+        repeatLastBtn.classList.remove('hidden');
+        emptyNotice.classList.add('hidden');
+      } else {
+        repeatLastBtn.classList.add('hidden');
+        emptyNotice.classList.remove('hidden');
       }
 
-      if (APP.brews.length === 0) {
-        listEl.innerHTML = '';
-        emptyEl.classList.remove('hidden');
-        return;
-      }
-
-      emptyEl.classList.add('hidden');
-      listEl.innerHTML = APP.brews.map(b => {
-        const timeStr = formatRelativeTime(b.timestamp);
+      feedList.innerHTML = brews.map(b => {
+        const timeAgo = formatTimeAgo(b.timestamp);
+        const isEsp = b.setup === 'espresso';
         return `
-          <div id="cupRow-${b.id}" class="group relative overflow-hidden rounded-xl bg-surface-card border border-surface-border p-3 transition hover:border-surface-borderSubtle flex items-center justify-between">
-            <div class="space-y-0.5 max-w-[62%]">
-              <div class="text-xs font-semibold text-white tracking-tight flex items-center gap-1.5">
-                <span class="px-1 py-0.2 rounded text-[9px] font-mono ${b.setup === 'espresso' ? 'bg-amber-950 text-amber-300' : 'bg-emerald-950 text-emerald-300'}">${b.drink}</span>
-                <span class="text-zinc-500">•</span>
-                <span class="text-zinc-300 font-normal truncate max-w-[140px]">${b.beanName}</span>
+          <div class="feed-card">
+            <div>
+              <div style="font-weight:700; display:flex; align-items:center; gap:6px;">
+                <span class="badge" style="background:${isEsp ? 'var(--amber-dark)' : 'var(--emerald-dark)'}; color:${isEsp ? 'var(--amber)' : 'var(--emerald)'};">${b.drink}</span>
+                <span style="color:#ccc; font-size:11px;" class="mono">${b.beanName}</span>
               </div>
-              <div class="text-[10px] font-mono text-zinc-500">
-                ${timeStr} • ${b.dose}g
+              <div class="mono" style="font-size:10px; color:var(--text-muted); margin-top:2px;">
+                ${timeAgo} • ${b.dose}g
               </div>
             </div>
-
-            <div class="flex items-center gap-1.5">
-              <div class="text-right font-mono pr-1">
-                <div class="text-xs font-bold text-emerald-400">+${fmt(b.savings)} <span class="text-[10px]">${APP.currency}</span></div>
-                <div class="text-[10px] text-zinc-500">Cost: ${fmt(b.cupCost)}</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="text-align:right;" class="mono">
+                <div class="emerald-text" style="font-weight:800; font-size:11px;">+${fmt(b.savings)} KD</div>
+                <div style="font-size:9px; color:var(--text-muted);">Cost: ${fmt(b.cupCost)}</div>
               </div>
-              <button onclick="duplicateCup('${b.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-surface-elevated active:scale-90 transition" title="Brew this again">
-                <i data-lucide="copy-plus" class="w-3.5 h-3.5 text-zinc-300"></i>
-              </button>
-              <button onclick="deleteCup('${b.id}')" class="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-surface-elevated active:scale-90 transition" title="Delete cup">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
+              <div class="feed-actions">
+                <button type="button" class="icon-btn" onclick="duplicateBrewById('${b.id}')" title="Brew again">↻</button>
+                <button type="button" class="icon-btn" onclick="deleteBrewById('${b.id}')" title="Delete">✕</button>
+              </div>
             </div>
           </div>
         `;
       }).join('');
-
-      refreshIcons();
     }
 
-    function duplicateCup(id) {
-      haptic(20);
-      const original = APP.brews.find(b => b.id === id);
+    function formatTimeAgo(ts) {
+      const diffSec = Math.floor((Date.now() - ts) / 1000);
+      if (diffSec < 60) return "Just now";
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+      return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+
+    function duplicateBrewById(id) {
+      triggerHaptic(15);
+      const original = (APP.brews || []).find(b => b.id === id);
       if (!original) return;
 
-      let bean = APP.beans.find(b => b.id === original.beanId && !b.finished);
+      const activeBeans = (APP.beans || []).filter(b => !b.finished);
+      let bean = activeBeans.find(b => b.id === original.beanId) || activeBeans[0];
       if (!bean) {
-        bean = APP.beans.find(b => !b.finished);
-        if (!bean) {
-          showToast("No active beans available. Add or unmark a bag in Pantry.");
-          return;
-        }
+        displayToast("No active beans available!");
+        return;
       }
 
       const dose = original.dose || 18;
-      const costPerG = bean.bagWeight > 0 ? (bean.bagPrice / bean.bagWeight) : (original.costPerG || 0);
-      const cupCost = dose * costPerG;
-      const benchmark = APP.benchmarks[original.drink] || original.benchmark || 2.000;
+      const cpg = bean.bagWeight > 0 ? (Number(bean.bagPrice) / Number(bean.bagWeight)) : original.costPerG;
+      const cupCost = dose * cpg;
+      const benchmark = original.benchmark || 2.000;
       const savings = benchmark - cupCost;
 
-      bean.remainingGrams = Math.max(0, bean.remainingGrams - dose);
+      bean.remainingGrams = Math.max(0, Number(bean.remainingGrams || 0) - dose);
 
-      const newBrew = {
+      const duplicated = {
         id: "brew-" + Date.now(),
         setup: original.setup || 'v60',
         drink: original.drink,
         beanId: bean.id,
         beanName: bean.name,
         dose,
-        costPerG,
+        costPerG: cpg,
         cupCost,
         benchmark,
         savings,
         timestamp: Date.now()
       };
 
-      APP.brews.unshift(newBrew);
-      saveState();
+      APP.brews.unshift(duplicated);
+      saveAppState();
 
-      renderQuickLogger();
-      renderFeed();
-      renderHero();
-      renderPantryData();
-      showToast(`Brewed again: ${original.drink} (${dose}g) • Saved +${fmtWithCurr(savings)}`);
+      renderBrewLogger();
+      renderRoiDashboard();
+      renderHistoryFeed();
+      renderPantryView();
+      displayToast(`Brewed again: ${original.drink} (+${fmtCurrency(savings)})`);
     }
 
     function duplicateLastBrew() {
-      if (APP.brews.length > 0) {
-        duplicateCup(APP.brews[0].id);
+      if (APP.brews && APP.brews.length > 0) {
+        duplicateBrewById(APP.brews[0].id);
+      }
+    }
+
+    function deleteBrewById(id) {
+      triggerHaptic(18);
+      const idx = (APP.brews || []).findIndex(b => b.id === id);
+      if (idx === -1) return;
+
+      const removed = APP.brews.splice(idx, 1)[0];
+
+      // Automatic inventory rollback
+      const bean = (APP.beans || []).find(b => b.id === removed.beanId);
+      if (bean) {
+        bean.remainingGrams = Math.min(Number(bean.bagWeight) * 2, Number(bean.remainingGrams || 0) + Number(removed.dose));
+      }
+
+      saveAppState();
+      renderBrewLogger();
+      renderRoiDashboard();
+      renderHistoryFeed();
+      renderPantryView();
+
+      displayUndoToast(`Deleted ${removed.drink} (${removed.dose}g refunded)`, () => {
+        if (bean) {
+          bean.remainingGrams = Math.max(0, Number(bean.remainingGrams || 0) - Number(removed.dose));
+        }
+        APP.brews.splice(idx, 0, removed);
+        saveAppState();
+        renderBrewLogger();
+        renderRoiDashboard();
+        renderHistoryFeed();
+        renderPantryView();
+        displayToast(`Restored ${removed.drink}`);
+      });
+    }
+
+    function renderPantryView() {
+      // Active Beans
+      const activeBeans = (APP.beans || []).filter(b => !b.finished);
+      const activeList = document.getElementById('activeBeansList');
+      if (activeBeans.length === 0) {
+        activeList.innerHTML = `<div class="mono" style="font-size:11px; color:var(--text-muted); padding:8px 0;">No active coffee beans. Add a bag above.</div>`;
       } else {
-        showToast("No previous brew to duplicate");
-      }
-    }
-
-    function formatRelativeTime(ts) {
-      const diffSec = Math.floor((Date.now() - ts) / 1000);
-      if (diffSec < 60) return "Just now";
-      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
-      const date = new Date(ts);
-      return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    }
-
-    function deleteCup(id) {
-      haptic(20);
-      const index = APP.brews.findIndex(b => b.id === id);
-      if (index === -1) return;
-
-      const deletedCup = APP.brews.splice(index, 1)[0];
-
-      // Automatic inventory rollback: refund dose back to bean bag
-      const bean = APP.beans.find(b => b.id === deletedCup.beanId);
-      if (bean) {
-        bean.remainingGrams = Math.min(bean.bagWeight * 2, bean.remainingGrams + deletedCup.dose);
+        activeList.innerHTML = activeBeans.map(bean => {
+          const cpg = bean.bagWeight > 0 ? (bean.bagPrice / bean.bagWeight) : 0;
+          return `
+            <div style="background:var(--elevated); border:1px solid var(--border-subtle); border-radius:10px; padding:10px; margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div style="font-weight:700;">${bean.name}</div>
+                  <div class="mono" style="font-size:10px; color:var(--text-muted); margin-top:2px;">
+                    ${bean.remainingGrams}g left of ${bean.bagWeight}g • ${fmt(cpg, 3)} KD/g
+                  </div>
+                </div>
+                <button type="button" class="icon-btn" onclick="deleteBeanById('${bean.id}')">✕</button>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:6px; border-top:1px solid var(--border-subtle);">
+                <button type="button" class="btn-secondary" onclick="resetBeanGrams('${bean.id}')" style="font-size:10px; padding:3px 6px;">Reset ${bean.bagWeight}g</button>
+                <button type="button" class="btn-secondary" onclick="markBeanAsFinished('${bean.id}')" style="font-size:10px; padding:3px 8px; background:var(--emerald-dark); color:var(--emerald); border-color:#065f46; font-weight:700;">
+                  ✓ Bag Finished
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
 
-      saveState();
-      renderHero();
-      renderFeed();
-      renderQuickLogger();
-      renderPantryData();
-
-      showUndoToast(`Deleted ${deletedCup.drink} (${deletedCup.dose}g refunded)`, () => {
-        undoDeleteCup(deletedCup, index);
-      });
-    }
-
-    function undoDeleteCup(cup, originalIndex) {
-      haptic(25);
-      const bean = APP.beans.find(b => b.id === cup.beanId);
-      if (bean) {
-        bean.remainingGrams = Math.max(0, bean.remainingGrams - cup.dose);
+      // Archived Beans
+      const archivedBeans = (APP.beans || []).filter(b => b.finished);
+      document.getElementById('archiveCountTag').textContent = `${archivedBeans.length}`;
+      const archivedList = document.getElementById('archivedBeansList');
+      if (archivedBeans.length === 0) {
+        archivedList.innerHTML = `<div class="mono" style="font-size:10px; color:var(--text-muted);">No archived bags.</div>`;
+      } else {
+        archivedList.innerHTML = archivedBeans.map(bean => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+            <div>
+              <div style="color:#aaa; text-decoration:line-through; font-size:11px;">${bean.name}</div>
+              <div class="mono" style="font-size:9px; color:#555;">${bean.bagWeight}g bag • ${fmtCurrency(bean.bagPrice)}</div>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button type="button" class="btn-secondary" onclick="reactivateBeanById('${bean.id}')" style="font-size:10px; padding:3px 6px;">Reactivate</button>
+              <button type="button" class="icon-btn" onclick="deleteBeanById('${bean.id}')">✕</button>
+            </div>
+          </div>
+        `).join('');
       }
 
-      APP.brews.splice(originalIndex, 0, cup);
-      saveState();
+      // Equipment
+      document.getElementById('gearCountTag').textContent = `${(APP.equipment || []).length}`;
+      const gearList = document.getElementById('equipmentList');
+      gearList.innerHTML = (APP.equipment || []).map(g => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+          <div>
+            <div style="font-size:11px; font-weight:600;">${g.name}</div>
+            <span class="badge" style="font-size:8px;">${g.setup.toUpperCase()}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="mono" style="font-size:11px;">${fmtCurrency(g.price)}</span>
+            <button type="button" class="icon-btn" onclick="deleteGearById('${g.id}')">✕</button>
+          </div>
+        </div>
+      `).join('');
 
-      renderHero();
-      renderFeed();
-      renderQuickLogger();
-      renderPantryData();
-      showToast(`Restored ${cup.drink} cup.`);
+      // Benchmark inputs
+      const bm = APP.benchmarks || DEFAULT_DATA.benchmarks;
+      document.getElementById('bmV60').value = bm["V60"] || 2.000;
+      document.getElementById('bmEspresso').value = bm["Espresso"] || 1.250;
+      document.getElementById('bmMilk').value = bm["Flat White"] || 1.750;
+      document.getElementById('bmCortado').value = bm["Cortado"] || 1.500;
     }
 
-    function showToast(message) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = "pointer-events-auto bg-[#181818] border border-surface-border text-white text-[11px] font-mono px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2 slide-up-enter";
-      toast.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> <span>${message}</span>`;
-      container.innerHTML = '';
-      container.appendChild(toast);
-      refreshIcons();
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 250);
-      }, 2500);
+    function toggleAddBeanForm() {
+      document.getElementById('addBeanForm').classList.toggle('hidden');
     }
 
-    function showUndoToast(message, undoCallback) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = "pointer-events-auto bg-[#181818] border border-[#2a2a2a] text-white text-[11px] font-mono px-3.5 py-2.5 rounded-xl shadow-2xl flex items-center justify-between gap-4 slide-up-enter w-full max-w-xs";
-      toast.innerHTML = `
-        <span class="truncate text-zinc-300">${message}</span>
-        <button id="undoActionBtn" class="px-2 py-0.5 rounded bg-white text-black font-bold text-[10px] active:scale-95 transition">
-          UNDO
-        </button>
-      `;
-      container.innerHTML = '';
-      container.appendChild(toast);
-
-      let triggered = false;
-      document.getElementById('undoActionBtn').addEventListener('click', () => {
-        if (!triggered) {
-          triggered = true;
-          toast.remove();
-          undoCallback();
-        }
-      });
-
-      setTimeout(() => {
-        if (!triggered) {
-          toast.style.opacity = '0';
-          setTimeout(() => toast.remove(), 250);
-        }
-      }, 5000);
-    }
-
-    function toggleBeanForm(forceOpen = false) {
-      const form = document.getElementById('addBeanForm');
-      if (forceOpen) form.classList.remove('hidden');
-      else form.classList.toggle('hidden');
-    }
-
-    function handleAddBeanSubmit(e) {
+    function submitNewBean(e) {
       e.preventDefault();
-      haptic(15);
+      triggerHaptic(15);
       const name = document.getElementById('newBeanName').value.trim();
       const weight = parseFloat(document.getElementById('newBeanWeight').value);
       const price = parseFloat(document.getElementById('newBeanPrice').value);
-
       if (!name || isNaN(weight) || isNaN(price)) return;
 
-      const newBean = {
-        id: "bean-" + Date.now(),
-        name,
-        bagWeight: weight,
-        bagPrice: price,
-        remainingGrams: weight,
-        finished: false
-      };
-
+      const newBean = { id: "bean-" + Date.now(), name, bagWeight: weight, bagPrice: price, remainingGrams: weight, finished: false };
       APP.beans.push(newBean);
-      saveState();
+      saveAppState();
 
       document.getElementById('newBeanName').value = '';
-      toggleBeanForm();
-      renderPantryData();
-      renderQuickLogger();
-      showToast(`Added bean "${name}"`);
+      toggleAddBeanForm();
+      renderBrewLogger();
+      renderPantryView();
+      displayToast(`Added bag: ${name}`);
     }
 
-    function deleteBean(id) {
-      const bean = APP.beans.find(b => b.id === id);
-      if (!bean) return;
-      showMinimalConfirm("Delete Bean?", `Permanently remove "${bean.name}"? Past brew history will remain.`, () => {
-        APP.beans = APP.beans.filter(b => b.id !== id);
-        saveState();
-        renderPantryData();
-        renderQuickLogger();
-        showToast("Bean removed.");
+    function markBeanAsFinished(id) {
+      triggerHaptic(15);
+      const b = (APP.beans || []).find(x => x.id === id);
+      if (!b) return;
+      openConfirmDialog("Archive Bag?", `Hide "${b.name}" from your daily brewer? History is preserved.`, () => {
+        b.finished = true;
+        saveAppState();
+        renderBrewLogger();
+        renderPantryView();
+        displayToast(`Archived "${b.name}"`);
       });
     }
 
-    function promptEditBeanRemaining(id) {
-      const bean = APP.beans.find(b => b.id === id);
-      if (!bean) return;
-      showMinimalConfirm("Reset to full bag?", `Reset remaining grams of "${bean.name}" back to ${bean.bagWeight}g?`, () => {
-        bean.remainingGrams = bean.bagWeight;
-        saveState();
-        renderPantryData();
-        renderQuickLogger();
-        showToast("Bean grams reset.");
+    function reactivateBeanById(id) {
+      triggerHaptic(12);
+      const b = (APP.beans || []).find(x => x.id === id);
+      if (b) {
+        b.finished = false;
+        saveAppState();
+        renderBrewLogger();
+        renderPantryView();
+        displayToast(`Reactivated "${b.name}"`);
+      }
+    }
+
+    function deleteBeanById(id) {
+      const b = (APP.beans || []).find(x => x.id === id);
+      if (!b) return;
+      openConfirmDialog("Delete Bean?", `Permanently remove "${b.name}"? Past logs remain intact.`, () => {
+        APP.beans = APP.beans.filter(x => x.id !== id);
+        saveAppState();
+        renderBrewLogger();
+        renderPantryView();
+        displayToast("Bean deleted.");
       });
     }
 
-    function toggleGearForm(forceOpen = false) {
-      const form = document.getElementById('addGearForm');
-      if (forceOpen) form.classList.remove('hidden');
-      else form.classList.toggle('hidden');
+    function resetBeanGrams(id) {
+      const b = (APP.beans || []).find(x => x.id === id);
+      if (b) {
+        b.remainingGrams = b.bagWeight;
+        saveAppState();
+        renderBrewLogger();
+        renderPantryView();
+        displayToast(`Reset to ${b.bagWeight}g`);
+      }
     }
 
-    function handleAddGearSubmit(e) {
+    function toggleAddGearForm() {
+      document.getElementById('addGearForm').classList.toggle('hidden');
+    }
+
+    function submitNewGear(e) {
       e.preventDefault();
-      haptic(15);
+      triggerHaptic(15);
       const name = document.getElementById('newGearName').value.trim();
       const price = parseFloat(document.getElementById('newGearPrice').value);
-      const setup = document.getElementById('newGearSetup').value || 'v60';
-
+      const setup = document.getElementById('newGearSetup').value;
       if (!name || isNaN(price)) return;
 
-      APP.equipment.push({
-        id: "eq-" + Date.now(),
-        name,
-        price,
-        setup
-      });
-      saveState();
+      APP.equipment.push({ id: "eq-" + Date.now(), name, price, setup });
+      saveAppState();
 
       document.getElementById('newGearName').value = '';
       document.getElementById('newGearPrice').value = '';
-      toggleGearForm();
-      renderPantryData();
-      renderHero();
-      showToast(`Added gear "${name}"`);
+      toggleAddGearForm();
+      renderRoiDashboard();
+      renderPantryView();
+      displayToast(`Added tool: ${name}`);
     }
 
-    function deleteGear(id) {
-      const item = APP.equipment.find(g => g.id === id);
-      if (!item) return;
-      showMinimalConfirm("Delete Tool?", `Remove "${item.name}" from fixed gear amortized cost?`, () => {
-        APP.equipment = APP.equipment.filter(g => g.id !== id);
-        saveState();
-        renderPantryData();
-        renderHero();
-        showToast("Gear removed.");
+    function deleteGearById(id) {
+      const g = (APP.equipment || []).find(x => x.id === id);
+      if (!g) return;
+      openConfirmDialog("Remove Tool?", `Remove "${g.name}" from your gear cost?`, () => {
+        APP.equipment = APP.equipment.filter(x => x.id !== id);
+        saveAppState();
+        renderRoiDashboard();
+        renderPantryView();
+        displayToast("Tool removed.");
       });
     }
 
-    function saveBenchmarks() {
-      haptic(10);
-      const v60 = parseFloat(document.getElementById('benchInputV60').value);
-      const esp = parseFloat(document.getElementById('benchInputEspresso').value);
-      const milk = parseFloat(document.getElementById('benchInputMilk').value);
-      const cortado = parseFloat(document.getElementById('benchInputCortado').value);
-      const curr = document.getElementById('settingCurrency').value.trim().toUpperCase() || "KD";
+    function saveBenchmarkPrices() {
+      triggerHaptic(15);
+      const v60 = parseFloat(document.getElementById('bmV60').value);
+      const esp = parseFloat(document.getElementById('bmEspresso').value);
+      const milk = parseFloat(document.getElementById('bmMilk').value);
+      const cort = parseFloat(document.getElementById('bmCortado').value);
 
-      if (!isNaN(v60)) {
-        APP.benchmarks["V60"] = v60;
-        APP.benchmarks["Switch"] = v60;
-        APP.benchmarks["Moka Pot"] = v60;
-      }
+      if (!isNaN(v60)) { APP.benchmarks["V60"] = v60; APP.benchmarks["Ice V60"] = v60 + 0.250; APP.benchmarks["Switch"] = v60; APP.benchmarks["Moka Pot"] = 1.250; }
       if (!isNaN(esp)) APP.benchmarks["Espresso"] = esp;
-      if (!isNaN(milk)) {
-        APP.benchmarks["Flat White"] = milk;
-        APP.benchmarks["Latte"] = milk;
-      }
-      if (!isNaN(cortado)) APP.benchmarks["Cortado"] = cortado;
-      APP.currency = curr;
+      if (!isNaN(milk)) { APP.benchmarks["Flat White"] = milk; APP.benchmarks["Latte"] = milk; }
+      if (!isNaN(cort)) APP.benchmarks["Cortado"] = cort;
 
-      saveState();
-      renderHero();
-      renderQuickLogger();
-      renderPantryData();
+      saveAppState();
+      renderBrewLogger();
+      renderRoiDashboard();
+      displayToast("Benchmark prices saved!");
     }
 
     function openExportModal() {
-      haptic(15);
-      const today = new Date().toISOString().split('T')[0];
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
-      document.getElementById('exportFromDate').value = thirtyDaysAgo;
-      document.getElementById('exportToDate').value = today;
+      triggerHaptic(12);
+      const modal = document.getElementById('exportModal');
+      modal.style.display = 'flex';
       setExportFilter('all');
-      document.getElementById('exportModal').classList.remove('hidden');
-      refreshIcons();
     }
 
     function closeExportModal() {
-      document.getElementById('exportModal').classList.add('hidden');
+      document.getElementById('exportModal').style.display = 'none';
     }
 
     function setExportFilter(type) {
-      haptic(10);
       APP.exportFilter = type;
       ['all', 'month', 'custom'].forEach(t => {
-        const btn = document.getElementById('expBtn' + (t === 'all' ? 'All' : (t === 'month' ? 'Month' : 'Custom')));
-        if (t === type) {
-          btn.className = "py-1.5 rounded-lg bg-white text-black font-semibold text-center";
-        } else {
-          btn.className = "py-1.5 rounded-lg bg-surface-elevated text-zinc-400 border border-surface-border text-center hover:text-white";
+        const btn = document.getElementById('expFilter' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (btn) {
+          if (t === type) btn.classList.add('active');
+          else btn.classList.remove('active');
         }
       });
 
-      const customBox = document.getElementById('customExportDates');
-      if (type === 'custom') customBox.classList.remove('hidden');
-      else customBox.classList.add('hidden');
+      const dateRangeBox = document.getElementById('exportDateRange');
+      if (type === 'custom') dateRangeBox.classList.remove('hidden');
+      else dateRangeBox.classList.add('hidden');
 
-      buildExportText();
+      generateExportSummary();
     }
 
-    function buildExportText() {
-      let filtered = [...APP.brews];
+    function generateExportSummary() {
+      let brews = [...(APP.brews || [])];
       const now = Date.now();
 
       if (APP.exportFilter === 'month') {
-        const threshold = now - (30 * 86400000);
-        filtered = filtered.filter(b => b.timestamp >= threshold);
+        brews = brews.filter(b => b.timestamp >= (now - 30 * 86400000));
       } else if (APP.exportFilter === 'custom') {
-        const fromVal = document.getElementById('exportFromDate').value;
-        const toVal = document.getElementById('exportToDate').value;
-        if (fromVal) filtered = filtered.filter(b => b.timestamp >= new Date(fromVal).getTime());
-        if (toVal) filtered = filtered.filter(b => b.timestamp <= new Date(toVal).getTime() + 86400000);
+        const start = document.getElementById('expStartDate').value;
+        const end = document.getElementById('expEndDate').value;
+        if (start) brews = brews.filter(b => b.timestamp >= new Date(start).getTime());
+        if (end) brews = brews.filter(b => b.timestamp <= (new Date(end).getTime() + 86400000));
       }
 
       let totalCost = 0;
       let totalSaved = 0;
 
-      const lines = filtered.map(b => {
-        totalCost += b.cupCost;
-        totalSaved += b.savings;
-        const dateStr = new Date(b.timestamp).toISOString().split('T')[0];
-        const setupStr = (b.setup || 'v60').toUpperCase();
-        return `${dateStr} | [${setupStr}] ${b.drink} | ${b.beanName} | ${b.dose}g | Cost: ${fmt(b.cupCost)} ${APP.currency} | Saved: ${fmt(b.savings)} ${APP.currency}`;
+      const lines = brews.map(b => {
+        totalCost += Number(b.cupCost || 0);
+        totalSaved += Number(b.savings || 0);
+        const d = new Date(b.timestamp).toISOString().split('T')[0];
+        return `${d} | [${(b.setup || 'v60').toUpperCase()}] ${b.drink} | ${b.beanName} | ${b.dose}g | Cost: ${fmt(b.cupCost)} KD | Saved: ${fmt(b.savings)} KD`;
       });
 
       const summary = `---
-Total Cups: ${filtered.length} | Total Spent on Beans: ${fmt(totalCost)} ${APP.currency} | Total Saved: ${fmt(totalSaved)} ${APP.currency}`;
+Total Cups: ${brews.length} | Spent: ${fmt(totalCost)} KD | Saved: ${fmt(totalSaved)} KD`;
 
-      const fullText = lines.length > 0 ? (lines.join('\n') + '\n' + summary) : "No coffee brews found in selected range.";
-      document.getElementById('exportPreviewArea').value = fullText;
+      document.getElementById('exportTextOutput').value = lines.length > 0 ? (lines.join('\n') + '\n' + summary) : "No coffee logs found in this date range.";
     }
 
-    function executeClipboardCopy() {
-      haptic(20);
-      const textarea = document.getElementById('exportPreviewArea');
-      textarea.select();
-      textarea.setSelectionRange(0, 99999);
+    function copyExportToClipboard() {
+      triggerHaptic(20);
+      const ta = document.getElementById('exportTextOutput');
+      ta.select();
+      ta.setSelectionRange(0, 99999);
 
-      let ok = false;
-      try {
-        ok = document.execCommand('copy');
-      } catch (e) {
-        ok = false;
-      }
+      let success = false;
+      try { success = document.execCommand('copy'); } catch (e) { success = false; }
 
-      if (ok) {
-        showToast("Copied log to clipboard");
+      if (success) {
+        displayToast("Logs copied to clipboard!");
         closeExportModal();
       } else {
-        showToast("Press and hold text to copy");
+        displayToast("Select and copy text above.");
       }
     }
 
-    function showMinimalConfirm(title, message, onOk, isAlertOnly = false) {
-      haptic(15);
-      const dialog = document.getElementById('minimalConfirmDialog');
-      const titleEl = document.getElementById('confirmDialogTitle');
-      const msgEl = document.getElementById('confirmDialogMsg');
+    function openConfirmDialog(title, msg, onOk) {
+      triggerHaptic(15);
+      const modal = document.getElementById('confirmModal');
+      const titleEl = document.getElementById('confirmTitle');
+      const msgEl = document.getElementById('confirmMessage');
       const cancelBtn = document.getElementById('confirmCancelBtn');
       const okBtn = document.getElementById('confirmOkBtn');
 
       titleEl.textContent = title;
-      msgEl.textContent = message;
-
-      if (isAlertOnly) {
-        cancelBtn.classList.add('hidden');
-        okBtn.textContent = "OK";
-      } else {
-        cancelBtn.classList.remove('hidden');
-        okBtn.textContent = "Confirm";
-      }
-
-      dialog.classList.remove('hidden');
+      msgEl.textContent = msg;
+      modal.style.display = 'flex';
 
       const handleOk = () => {
-        dialog.classList.add('hidden');
+        modal.style.display = 'none';
         cleanup();
         if (onOk) onOk();
       };
       const handleCancel = () => {
-        dialog.classList.add('hidden');
+        modal.style.display = 'none';
         cleanup();
       };
       function cleanup() {
@@ -1475,42 +1566,56 @@ Total Cups: ${filtered.length} | Total Spent on Beans: ${fmt(totalCost)} ${APP.c
       cancelBtn.addEventListener('click', handleCancel);
     }
 
-    function refreshIcons() {
-      if (window.lucide && typeof window.lucide.createIcons === 'function') {
-        window.lucide.createIcons();
-      }
+    function displayToast(msg) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = "toast-msg";
+      t.innerHTML = `<span style="color:var(--emerald); font-weight:800;">✓</span> <span>${msg}</span>`;
+      c.innerHTML = '';
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 2500);
     }
 
-    // Dynamic Web App Manifest Injection for Chrome Homescreen Install
-    function setupAppIconAndManifest() {
-      const manifest = {
-        name: "BrewLog ROI",
-        short_name: "BrewLog",
-        start_url: "./index.html",
-        display: "standalone",
-        background_color: "#000000",
-        theme_color: "#000000",
-        orientation: "portrait"
-      };
-      const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
-      const manifestUrl = URL.createObjectURL(blob);
-      let link = document.querySelector('link[rel="manifest"]');
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'manifest';
-        document.head.appendChild(link);
+    function displayUndoToast(msg, undoCallback) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = "toast-msg";
+      t.innerHTML = `
+        <span style="truncate">${msg}</span>
+        <button type="button" id="undoBtn" class="btn-main" style="padding:4px 8px; font-size:10px; width:auto;">UNDO</button>
+      `;
+      c.innerHTML = '';
+      c.appendChild(t);
+
+      let clicked = false;
+      const btn = document.getElementById('undoBtn');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          if (!clicked) {
+            clicked = true;
+            t.remove();
+            undoCallback();
+          }
+        });
       }
-      link.href = manifestUrl;
+      setTimeout(() => { if (!clicked) t.remove(); }, 5000);
+    }
+
+    function promptFactoryReset() {
+      openConfirmDialog("Reset All App Data?", "This will clear your personal logs and restore default coffee bags, tools, and benchmarks.", () => {
+        APP = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        saveAppState();
+        switchNavTab('brew');
+        displayToast("App restored to clean defaults!");
+      });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      loadState();
-      setupAppIconAndManifest();
-      renderQuickLogger();
-      renderHero();
-      renderFeed();
-      renderPantryData();
-      refreshIcons();
+      loadAppState();
+      renderBrewLogger();
+      renderRoiDashboard();
+      renderHistoryFeed();
+      renderPantryView();
     });
   </script>
 </body>
