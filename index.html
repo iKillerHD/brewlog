@@ -18,6 +18,18 @@
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
+
+    /* Remove browser spinner arrows completely */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
     :root {
       --bg: #000000;
       --card: #111111;
@@ -57,7 +69,7 @@
     /* Top Navigation */
     .top-bar {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       padding-top: 6px;
     }
@@ -67,19 +79,6 @@
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--text);
-    }
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 500;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .btn-ghost:active {
-      background: var(--card-subtle);
     }
 
     /* Tab Switcher */
@@ -140,6 +139,53 @@
       align-items: center;
     }
 
+    /* Accordion Dropdowns for Tools */
+    details.accordion {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+    details.accordion[open] {
+      border-color: #333333;
+    }
+    details.accordion summary {
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    details.accordion summary::-webkit-details-marker {
+      display: none;
+    }
+    details.accordion summary::after {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-right: 2px solid var(--text-muted);
+      border-bottom: 2px solid var(--text-muted);
+      transform: rotate(45deg);
+      transition: transform 0.2s ease;
+      margin-right: 4px;
+    }
+    details.accordion[open] summary::after {
+      transform: rotate(-135deg);
+    }
+    .accordion-body {
+      padding: 14px 16px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+    }
+
     /* Inputs */
     .field-group {
       display: flex;
@@ -151,7 +197,7 @@
       font-weight: 500;
       color: var(--text-muted);
     }
-    select, input[type="text"], input[type="number"] {
+    select, input[type="text"], input[type="number"], input[type="date"] {
       width: 100%;
       background: #080808;
       border: 1px solid var(--border);
@@ -161,15 +207,15 @@
       color: var(--text);
       outline: none;
     }
-    select:focus, input[type="text"]:focus, input[type="number"]:focus {
+    select:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus {
       border-color: var(--border-focus);
     }
 
-    /* Range Slider */
+    /* Dose Range Slider & Clean Box */
     .slider-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
     input[type="range"] {
       flex: 1;
@@ -190,16 +236,17 @@
       cursor: pointer;
     }
     .dose-input-box {
-      width: 78px;
+      width: 82px;
       display: flex;
       align-items: center;
+      justify-content: center;
       background: #080808;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 6px 8px;
+      padding: 8px 10px;
     }
     .dose-input-box input {
-      width: 44px;
+      width: 48px;
       background: transparent;
       border: none;
       padding: 0;
@@ -207,11 +254,12 @@
       font-weight: 600;
       color: var(--text);
       text-align: right;
+      outline: none;
     }
     .dose-input-box span {
       font-size: 13px;
       color: var(--text-muted);
-      margin-left: 2px;
+      margin-left: 4px;
     }
 
     /* Preset Chips */
@@ -288,7 +336,7 @@
       border: 1px solid var(--border);
       color: var(--text-muted);
       border-radius: 6px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
@@ -331,9 +379,10 @@
     }
     .roi-label {
       font-size: 12px;
+      font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
     }
     .roi-amount-row {
       display: flex;
@@ -437,7 +486,7 @@
       border-color: var(--danger);
     }
 
-    /* Pantry / Gear Management */
+    /* Sub Cards inside Tools Dropdowns */
     .sub-card {
       background: #0a0a0a;
       border: 1px solid var(--border);
@@ -445,7 +494,7 @@
       padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
     .sub-card-row {
       display: flex;
@@ -456,10 +505,10 @@
       font-size: 13px;
       color: var(--text-muted);
       text-align: center;
-      padding: 24px 0;
+      padding: 16px 0;
     }
 
-    /* Toast Snackbar */
+    /* Toast Notification */
     #toastContainer {
       position: fixed;
       bottom: 20px;
@@ -497,7 +546,7 @@
       letter-spacing: 0.05em;
     }
 
-    /* Simple Modal */
+    /* Modals */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -521,7 +570,7 @@
     }
     textarea.export-text {
       width: 100%;
-      height: 180px;
+      height: 160px;
       background: #080808;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -539,20 +588,17 @@
 
 <div class="app-container">
 
-  <!-- Header -->
+  <!-- Top Bar (Clean & Minimal) -->
   <header class="top-bar">
     <div class="brand">BrewLog</div>
-    <div style="display: flex; gap: 8px;">
-      <button class="btn-ghost" id="openExportBtn">Export</button>
-    </div>
   </header>
 
-  <!-- 4 Primary Minimal Tabs (No Emojis) -->
+  <!-- Navigation Tabs -->
   <nav class="tab-nav">
     <button class="tab-btn active" data-tab="view-brew">Brew</button>
     <button class="tab-btn" data-tab="view-roi">ROI</button>
     <button class="tab-btn" data-tab="view-logs">Logs</button>
-    <button class="tab-btn" data-tab="view-pantry">Pantry</button>
+    <button class="tab-btn" data-tab="view-tools">Tools</button>
   </nav>
 
   <!-- 1. BREW VIEW -->
@@ -563,7 +609,7 @@
         <button class="btn-subtle" id="repeatLastBtn" style="padding: 3px 8px; font-size: 11px;">Repeat Last</button>
       </div>
 
-      <!-- Drink Type (4 Strict Drinks Only) -->
+      <!-- Drink Type (Strict 4 Types) -->
       <div class="field-group">
         <label class="field-label">Drink Type</label>
         <select id="brewDrinkSelect">
@@ -579,11 +625,11 @@
         <label class="field-label">Bean Bag</label>
         <select id="brewBeanSelect"></select>
         <div id="noBeanWarning" class="field-label hidden" style="color: var(--danger); font-size: 11px;">
-          No active beans in stock. Add or reactivate a bag in Pantry.
+          No active beans in stock. Add or reactivate a bag in Tools.
         </div>
       </div>
 
-      <!-- Dose Selector (Slider + Numeric Input) -->
+      <!-- Dose Selector -->
       <div class="field-group">
         <label class="field-label">Dose Weight</label>
         <div class="slider-row">
@@ -617,7 +663,7 @@
     </div>
   </section>
 
-  <!-- 2. ROI BREAK-EVEN VIEW -->
+  <!-- 2. ROI VIEW -->
   <section id="view-roi" class="view-section hidden">
     <!-- Setup Switcher -->
     <div class="setup-segmented">
@@ -627,7 +673,7 @@
 
     <!-- Hero Card -->
     <div class="card roi-hero">
-      <span class="roi-label" id="roiHeroStatusLabel">Remaining to Break Even</span>
+      <span class="roi-label" id="roiHeroStatusLabel">ROI Gap</span>
       <div class="roi-amount-row mono">
         <span class="roi-main-val" id="roiHeroAmount">0.000</span>
         <span class="roi-currency">KD</span>
@@ -677,80 +723,91 @@
     <div class="list-feed" id="brewList"></div>
   </section>
 
-  <!-- 4. PANTRY & SETTINGS VIEW -->
-  <section id="view-pantry" class="view-section hidden">
-    <!-- Bean Bags In-Stock -->
-    <div class="card">
-      <div class="card-title">
-        <span>Active Beans</span>
-        <button class="btn-subtle" id="showAddBeanModalBtn" style="padding: 3px 8px; font-size: 11px;">+ New Bag</button>
-      </div>
-      <div class="list-feed" id="activeBeanList"></div>
-    </div>
+  <!-- 4. TOOLS VIEW (Decluttered Collapsible Accordions) -->
+  <section id="view-tools" class="view-section hidden">
 
-    <!-- Finished Bags Archive -->
-    <div class="card">
-      <div class="card-title">
-        <span>Finished Bags Archive</span>
+    <!-- Active Coffee Beans Accordion -->
+    <details class="accordion" open>
+      <summary>Active Beans</summary>
+      <div class="accordion-body">
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="btn-subtle" id="showAddBeanModalBtn">+ Add Bean Bag</button>
+        </div>
+        <div class="list-feed" id="activeBeanList"></div>
       </div>
-      <div class="list-feed" id="finishedBeanList"></div>
-    </div>
+    </details>
 
-    <!-- Equipment List -->
-    <div class="card">
-      <div class="card-title">
-        <span>Equipment</span>
-        <button class="btn-subtle" id="showAddGearModalBtn" style="padding: 3px 8px; font-size: 11px;">+ Add Gear</button>
+    <!-- Finished Bags Archive Accordion -->
+    <details class="accordion">
+      <summary>Finished Bags Archive</summary>
+      <div class="accordion-body">
+        <div class="list-feed" id="finishedBeanList"></div>
       </div>
-      <div class="list-feed" id="gearList"></div>
-    </div>
+    </details>
 
-    <!-- Benchmark Cafe Prices -->
-    <div class="card">
-      <div class="card-title">Cafe Benchmark Prices</div>
-      <div class="field-group">
-        <label class="field-label">V60 Benchmark (KD)</label>
-        <input type="number" step="0.050" class="mono" id="benchV60">
+    <!-- Equipment Accordion -->
+    <details class="accordion">
+      <summary>Equipment</summary>
+      <div class="accordion-body">
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="btn-subtle" id="showAddGearModalBtn">+ Add Equipment</button>
+        </div>
+        <div class="list-feed" id="gearList"></div>
       </div>
-      <div class="field-group">
-        <label class="field-label">Milk Based Benchmark (KD)</label>
-        <input type="number" step="0.050" class="mono" id="benchMilk">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Espresso Benchmark (KD)</label>
-        <input type="number" step="0.050" class="mono" id="benchEspresso">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Moka Pot Benchmark (KD)</label>
-        <input type="number" step="0.050" class="mono" id="benchMoka">
-      </div>
-      <button class="btn-primary" id="saveBenchmarksBtn">Save Benchmarks</button>
-    </div>
+    </details>
 
-    <!-- System Actions -->
-    <div style="display: flex; justify-content: center; padding: 12px 0;">
-      <button class="btn-subtle" id="resetAppDataBtn" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">
-        Reset App Data to Defaults
-      </button>
-    </div>
+    <!-- Benchmark Cafe Prices Accordion -->
+    <details class="accordion">
+      <summary>Cafe Benchmark Prices</summary>
+      <div class="accordion-body">
+        <div class="field-group">
+          <label class="field-label">V60 Benchmark (KD)</label>
+          <input type="number" step="0.050" class="mono" id="benchV60">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Milk Based Benchmark (KD)</label>
+          <input type="number" step="0.050" class="mono" id="benchMilk">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Espresso Benchmark (KD)</label>
+          <input type="number" step="0.050" class="mono" id="benchEspresso">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Moka Pot Benchmark (KD)</label>
+          <input type="number" step="0.050" class="mono" id="benchMoka">
+        </div>
+        <button class="btn-primary" id="saveBenchmarksBtn">Save Benchmarks</button>
+      </div>
+    </details>
+
+    <!-- Export & Plain Text Log Accordion -->
+    <details class="accordion">
+      <summary>Export Logs</summary>
+      <div class="accordion-body">
+        <div class="chip-group">
+          <button class="chip active" id="exportRangeAll">All Time</button>
+          <button class="chip" id="exportRange30">Last 30 Days</button>
+        </div>
+        <textarea class="export-text mono" id="exportContent" readonly></textarea>
+        <button class="btn-primary" id="copyClipboardBtn">Copy to Clipboard</button>
+      </div>
+    </details>
+
+    <!-- App Data Reset Accordion -->
+    <details class="accordion">
+      <summary>Reset Data</summary>
+      <div class="accordion-body">
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+          Clear local brew logs, reset gear and restore original demo parameters.
+        </p>
+        <button class="btn-subtle" id="resetAppDataBtn" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">
+          Reset App Data to Defaults
+        </button>
+      </div>
+    </details>
+
   </section>
 
-</div>
-
-<!-- EXPORT MODAL -->
-<div id="exportModal" class="modal-overlay hidden">
-  <div class="modal-sheet">
-    <div class="card-title">
-      <span>Export Brewing Log</span>
-      <button class="btn-subtle" id="closeExportBtn" style="padding: 2px 6px;">Close</button>
-    </div>
-    <div class="chip-group">
-      <button class="chip active" id="exportRangeAll">All Time</button>
-      <button class="chip" id="exportRange30">Last 30 Days</button>
-    </div>
-    <textarea class="export-text mono" id="exportContent" readonly></textarea>
-    <button class="btn-primary" id="copyClipboardBtn">Copy to Clipboard</button>
-  </div>
 </div>
 
 <!-- ADD BEAN MODAL -->
@@ -761,8 +818,12 @@
       <button class="btn-subtle" id="closeAddBeanBtn" style="padding: 2px 6px;">Close</button>
     </div>
     <div class="field-group">
-      <label class="field-label">Roaster & Origin</label>
+      <label class="field-label">Roaster & Bean Name</label>
       <input type="text" id="newBeanName" placeholder="e.g. Wafer - Ash Roastery">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Roast Date (Optional)</label>
+      <input type="date" id="newBeanRoastDate">
     </div>
     <div class="field-group">
       <label class="field-label">Bag Weight (grams)</label>
@@ -810,7 +871,6 @@
 (function() {
   'use strict';
 
-  // Strict 4 Drink Types & System Metadata
   const DRINK_CONFIG = {
     v60: { label: "V60", defaultBenchmark: 2.000, setup: "v60" },
     milk: { label: "Milk based drink", defaultBenchmark: 1.750, setup: "espresso" },
@@ -820,7 +880,6 @@
 
   const STORAGE_KEY = "brewlog_minimal_db";
 
-  // Safe Local Storage Wrapper
   const Storage = {
     get: function() {
       try {
@@ -836,7 +895,6 @@
     }
   };
 
-  // Default Seed Data
   function getDefaultData() {
     return {
       activeSetup: "v60",
@@ -847,8 +905,8 @@
         moka: 1.250
       },
       beans: [
-        { id: "b1", name: "Wafer - Ash Roastery", weight: 250, price: 5.500, remainingGrams: 232, isFinished: false },
-        { id: "b2", name: "Pineapple - Rawis", weight: 250, price: 6.250, remainingGrams: 250, isFinished: false }
+        { id: "b1", name: "Wafer - Ash Roastery", weight: 250, price: 5.500, roastDate: "2026-09-10", isFinished: false },
+        { id: "b2", name: "Pineapple - Rawis", weight: 250, price: 6.250, roastDate: "", isFinished: false }
       ],
       gear: [
         { id: "g1", name: "Fellow Ode Gen 1", price: 95.000, setup: "v60" },
@@ -863,7 +921,6 @@
 
   let db = Storage.get() || getDefaultData();
 
-  // Validate State Model
   if (!db.benchmarks) db.benchmarks = { v60: 2.000, milk: 1.750, espresso: 1.250, moka: 1.250 };
   if (!db.activeSetup) db.activeSetup = "v60";
   if (!Array.isArray(db.beans)) db.beans = [];
@@ -875,19 +932,18 @@
     Storage.set(db);
   }
 
-  // Currency Formatter (Fixed 3 Decimal Places)
   function formatKD(amount) {
     const num = Number(amount) || 0;
     return num.toFixed(3) + " KD";
   }
 
-  // UI Element Selectors
+  // Selectors
   const tabs = document.querySelectorAll(".tab-btn");
   const views = {
     "view-brew": document.getElementById("view-brew"),
     "view-roi": document.getElementById("view-roi"),
     "view-logs": document.getElementById("view-logs"),
-    "view-pantry": document.getElementById("view-pantry")
+    "view-tools": document.getElementById("view-tools")
   };
 
   const brewDrinkSelect = document.getElementById("brewDrinkSelect");
@@ -924,7 +980,7 @@
   const benchMoka = document.getElementById("benchMoka");
   const saveBenchmarksBtn = document.getElementById("saveBenchmarksBtn");
 
-  // Navigation Logic
+  // Navigation
   tabs.forEach(btn => {
     btn.addEventListener("click", () => {
       tabs.forEach(t => t.classList.remove("active"));
@@ -938,10 +994,13 @@
         }
       });
       renderAll();
+      if (targetView === "view-tools") {
+        generateExportText();
+      }
     });
   });
 
-  // Setup Switcher (V60 vs Espresso)
+  // Setup Switcher
   setupSegBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       setupSegBtns.forEach(b => b.classList.remove("active"));
@@ -952,7 +1011,7 @@
     });
   });
 
-  // Dose Synchronization
+  // Synchronized Dose Controls
   doseSlider.addEventListener("input", (e) => {
     doseNumber.value = parseFloat(e.target.value).toFixed(1);
     updateBrewCalculations();
@@ -965,7 +1024,7 @@
     updateBrewCalculations();
   });
 
-  // Quick Dose Chips
+  // Dose Quick Chips
   document.querySelectorAll(".chip[data-dose]").forEach(chip => {
     chip.addEventListener("click", () => {
       document.querySelectorAll(".chip[data-dose]").forEach(c => c.classList.remove("active"));
@@ -980,7 +1039,6 @@
   brewDrinkSelect.addEventListener("change", updateBrewCalculations);
   brewBeanSelect.addEventListener("change", updateBrewCalculations);
 
-  // Calculate Real-Time Brew Cost & Savings
   function updateBrewCalculations() {
     const beanId = brewBeanSelect.value;
     const bean = db.beans.find(b => b.id === beanId);
@@ -1002,7 +1060,6 @@
     previewSaved.textContent = (netSaved >= 0 ? "+" : "") + formatKD(netSaved);
   }
 
-  // Populate Active Beans in Logger Dropdown
   function populateBeanSelect() {
     const activeBeans = db.beans.filter(b => !b.isFinished);
     brewBeanSelect.innerHTML = "";
@@ -1025,7 +1082,7 @@
     activeBeans.forEach(b => {
       const opt = document.createElement("option");
       opt.value = b.id;
-      opt.textContent = `${b.name} (${b.remainingGrams}g left)`;
+      opt.textContent = b.roastDate ? `${b.name} (${b.roastDate})` : b.name;
       brewBeanSelect.appendChild(opt);
     });
 
@@ -1046,9 +1103,6 @@
     const netSaved = benchmark - cupCost;
     const setupType = DRINK_CONFIG[drinkKey].setup;
 
-    // Deduct grams
-    bean.remainingGrams = Math.max(0, bean.remainingGrams - dose);
-
     const newBrew = {
       id: "brew_" + Date.now(),
       drinkKey: drinkKey,
@@ -1068,7 +1122,7 @@
     showToast(`Logged ${newBrew.drinkLabel} (+${formatKD(netSaved)})`);
   });
 
-  // Repeat Last Brew Action
+  // Repeat Last Brew
   repeatLastBtn.addEventListener("click", () => {
     if (db.brews.length === 0) {
       showToast("No brews to repeat");
@@ -1086,8 +1140,6 @@
     const cupCost = dose * costPerGram;
     const benchmark = db.benchmarks[lastBrew.drinkKey] || 1.500;
     const netSaved = benchmark - cupCost;
-
-    bean.remainingGrams = Math.max(0, bean.remainingGrams - dose);
 
     const repeatedBrew = {
       id: "brew_" + Date.now(),
@@ -1108,11 +1160,10 @@
     showToast(`Repeated ${repeatedBrew.drinkLabel}`);
   });
 
-  // Render ROI Analytics Dashboard
+  // Render ROI Analytics
   function renderROI() {
     const curSetup = db.activeSetup;
 
-    // Gear total calculation for active setup
     let gearTotal = 0;
     db.gear.forEach(g => {
       if (g.setup === curSetup) {
@@ -1122,7 +1173,6 @@
       }
     });
 
-    // Filter brews for this setup
     const relevantBrews = db.brews.filter(b => b.setup === curSetup);
     const totalCups = relevantBrews.length;
     const totalSaved = relevantBrews.reduce((acc, b) => acc + (b.netSaved || 0), 0);
@@ -1132,14 +1182,14 @@
     const pct = gearTotal > 0 ? Math.min(100, Math.max(0, (totalSaved / gearTotal) * 100)) : 0;
 
     if (remaining <= 0 && gearTotal > 0) {
-      roiHeroStatusLabel.textContent = "Net Profit Achieved";
+      roiHeroStatusLabel.textContent = "Net Return";
       roiHeroStatusLabel.style.color = "var(--accent)";
       roiHeroAmount.textContent = "+" + Math.abs(remaining).toFixed(3);
       roiHeroAmount.style.color = "var(--accent)";
       roiProgressBar.classList.add("done");
       roiProgressBar.style.width = "100%";
     } else {
-      roiHeroStatusLabel.textContent = "Remaining to Break Even";
+      roiHeroStatusLabel.textContent = "ROI Gap";
       roiHeroStatusLabel.style.color = "var(--text-muted)";
       roiHeroAmount.textContent = Math.max(0, remaining).toFixed(3);
       roiHeroAmount.style.color = "var(--text)";
@@ -1161,7 +1211,7 @@
     roiAvgSaved.textContent = (avgSaved >= 0 ? "+" : "") + formatKD(avgSaved);
   }
 
-  // Render Recent Brews List
+  // Render Logs View
   function renderLogs() {
     brewList.innerHTML = "";
     feedCount.textContent = `${db.brews.length} brews`;
@@ -1196,7 +1246,6 @@
       brewList.appendChild(card);
     });
 
-    // Delete brew handler with undo
     brewList.querySelectorAll("[data-del]").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-del");
@@ -1204,7 +1253,6 @@
       });
     });
 
-    // Repeat specific brew
     brewList.querySelectorAll("[data-repeat]").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-repeat");
@@ -1224,33 +1272,21 @@
     });
   }
 
-  // Delete Brew & Refund Grams
   function deleteBrew(brewId) {
     const idx = db.brews.findIndex(b => b.id === brewId);
     if (idx === -1) return;
 
     const brew = db.brews[idx];
     db.brews.splice(idx, 1);
-
-    // Refund bean grams
-    const bean = db.beans.find(b => b.id === brew.beanId);
-    if (bean) {
-      bean.remainingGrams = Math.min(bean.weight, bean.remainingGrams + brew.dose);
-    }
-
     db.trash.push({ brew: brew, deletedAt: Date.now() });
     saveState();
     renderAll();
 
-    showToast(`Brew deleted & ${brew.dose}g refunded`, () => {
-      // Undo callback
+    showToast(`Brew deleted`, () => {
       const trashIdx = db.trash.findIndex(t => t.brew.id === brew.id);
       if (trashIdx !== -1) {
         const item = db.trash.splice(trashIdx, 1)[0];
         db.brews.splice(idx, 0, item.brew);
-        if (bean) {
-          bean.remainingGrams = Math.max(0, bean.remainingGrams - item.brew.dose);
-        }
         saveState();
         renderAll();
         showToast("Restored brew");
@@ -1258,8 +1294,8 @@
     });
   }
 
-  // Render Pantry Beans & Equipment
-  function renderPantry() {
+  // Render Tools View
+  function renderTools() {
     // 1. Active Beans
     activeBeanList.innerHTML = "";
     const activeBeans = db.beans.filter(b => !b.isFinished);
@@ -1270,14 +1306,15 @@
         const sub = document.createElement("div");
         sub.className = "sub-card";
         const costG = (bean.price / bean.weight).toFixed(3);
+        const roastSub = bean.roastDate ? `<span style="color: #888888;">Roasted: ${bean.roastDate}</span> &middot; ` : '';
         sub.innerHTML = `
           <div class="sub-card-row">
             <span style="font-weight: 600; font-size: 14px;">${bean.name}</span>
             <span class="mono" style="font-size: 13px; color: var(--text-muted);">${formatKD(bean.price)}</span>
           </div>
           <div class="sub-card-row mono" style="font-size: 12px; color: var(--text-muted);">
-            <span>${bean.remainingGrams}g / ${bean.weight}g left &middot; ${costG} KD/g</span>
-            <button class="btn-subtle" data-finish="${bean.id}" style="padding: 3px 8px; font-size: 11px;">Bag Finished</button>
+            <span>${roastSub}${bean.weight}g &middot; ${costG} KD/g</span>
+            <button class="btn-subtle" data-finish="${bean.id}" style="padding: 2px 8px; font-size: 11px;">Bag Finished</button>
           </div>
         `;
         activeBeanList.appendChild(sub);
@@ -1288,15 +1325,16 @@
     finishedBeanList.innerHTML = "";
     const finishedBeans = db.beans.filter(b => b.isFinished);
     if (finishedBeans.length === 0) {
-      finishedBeanList.innerHTML = '<div class="empty-state">No archived bags yet.</div>';
+      finishedBeanList.innerHTML = '<div class="empty-state">No archived bags.</div>';
     } else {
       finishedBeans.forEach(bean => {
         const sub = document.createElement("div");
         sub.className = "sub-card";
-        sub.style.opacity = "0.7";
+        sub.style.opacity = "0.75";
+        const roastSub = bean.roastDate ? `<span style="color: #666666;"> &middot; Roasted: ${bean.roastDate}</span>` : '';
         sub.innerHTML = `
           <div class="sub-card-row">
-            <span style="font-size: 13px; color: var(--text-muted);">${bean.name}</span>
+            <span style="font-size: 13px; color: var(--text-muted);">${bean.name}${roastSub}</span>
             <button class="btn-subtle" data-reactivate="${bean.id}" style="padding: 2px 6px; font-size: 10px;">Reactivate</button>
           </div>
         `;
@@ -1304,7 +1342,6 @@
       });
     }
 
-    // Finished & Reactivate Handlers
     activeBeanList.querySelectorAll("[data-finish]").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-finish");
@@ -1370,7 +1407,6 @@
     benchMoka.value = (db.benchmarks.moka || 1.250).toFixed(3);
   }
 
-  // Save Baseline Prices
   saveBenchmarksBtn.addEventListener("click", () => {
     db.benchmarks.v60 = parseFloat(benchV60.value) || 2.000;
     db.benchmarks.milk = parseFloat(benchMilk.value) || 1.750;
@@ -1379,7 +1415,7 @@
     saveState();
     updateBrewCalculations();
     renderROI();
-    showToast("Benchmark prices updated");
+    showToast("Benchmark prices saved");
   });
 
   // Add Bean Modal
@@ -1392,6 +1428,7 @@
   });
   document.getElementById("saveNewBeanBtn").addEventListener("click", () => {
     const name = document.getElementById("newBeanName").value.trim();
+    const roastDate = document.getElementById("newBeanRoastDate").value;
     const weight = parseFloat(document.getElementById("newBeanWeight").value) || 250;
     const price = parseFloat(document.getElementById("newBeanPrice").value) || 0;
     if (!name) {
@@ -1403,10 +1440,11 @@
       name: name,
       weight: weight,
       price: price,
-      remainingGrams: weight,
+      roastDate: roastDate || "",
       isFinished: false
     });
     document.getElementById("newBeanName").value = "";
+    document.getElementById("newBeanRoastDate").value = "";
     saveState();
     addBeanModal.classList.add("hidden");
     renderAll();
@@ -1443,18 +1481,10 @@
     showToast(`Added ${name}`);
   });
 
-  // Export Log Modal
-  const exportModal = document.getElementById("exportModal");
+  // Export Filter & Generator
   const exportContent = document.getElementById("exportContent");
   let exportFilter = "all";
 
-  document.getElementById("openExportBtn").addEventListener("click", () => {
-    generateExportText();
-    exportModal.classList.remove("hidden");
-  });
-  document.getElementById("closeExportBtn").addEventListener("click", () => {
-    exportModal.classList.add("hidden");
-  });
   document.getElementById("exportRangeAll").addEventListener("click", function() {
     exportFilter = "all";
     this.classList.add("active");
@@ -1552,10 +1582,10 @@
     populateBeanSelect();
     renderROI();
     renderLogs();
-    renderPantry();
+    renderTools();
   }
 
-  // Initialize
+  // Initial Load
   renderAll();
 
 })();
